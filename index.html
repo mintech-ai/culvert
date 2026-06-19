@@ -5,57 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#1B4332">
   <title>CULVERT MONITORING SYSTEM</title>
-
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="https://placehold.co/192x192/1B4332/ffffff?text=CLV">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <script>
     tailwind.config = { 
       theme: { 
         extend: { 
-          colors: { 
-            theme1: '#1B4332', 
-            theme2: '#2D6A4F', 
-            theme3: '#40916C', 
-            theme4: '#52B788', 
-            theme5: '#D8F3DC' 
-          },
-          fontFamily: { 
-            sans: ['Inter', 'sans-serif'], 
-            mono: ['Roboto Mono', 'monospace'] 
-          }
+          colors: { theme1: '#1B4332', theme2: '#2D6A4F', theme3: '#40916C', theme4: '#52B788', theme5: '#D8F3DC' },
+          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['Roboto Mono', 'monospace'] }
         } 
-      } 
+      }
     }
   </script>
-
   <style>
+    .loader { border-top-color: #1B4332; animation: spinner 1s linear infinite; }
+    @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .nav-active { color: #52B788 !important; border-bottom: 2px solid #52B788; }
+    .mobile-nav-active { color: #52B788 !important; background-color: rgba(82, 183, 136, 0.1); border-left: 4px solid #52B788; }
     .no-scroll { overflow: hidden; }
   </style>
 </head>
-<body class="bg-gray-50 text-theme1 font-sans antialiased relative no-scroll">
+<body class="bg-gray-50 text-theme1 font-sans antialiased relative">
 
-  <div id="offlineBanner" class="hidden bg-red-600 text-white font-medium text-center py-2 text-xs uppercase tracking-wider sticky top-0 z-[100] shadow-md animate-pulse">
-    <i class="ph-bold ph-wifi-slash mr-1"></i> Mode Offline Aktif — Anda bekerja tanpa signal
-  </div>
-
-  <div id="syncBanner" class="hidden bg-amber-500 text-theme1 font-bold text-center py-3 text-xs uppercase tracking-wide sticky top-0 z-[99] shadow-md flex justify-center items-center gap-2">
-    <span><i class="ph-fill ph-warning-octagon text-lg"></i> Ada <span id="syncCount" class="underline font-mono">0</span> data pengamatan lapangan belum disinkronkan</span>
-    <button onclick="syncOfflineData()" class="bg-theme1 text-white px-3 py-1 rounded shadow hover:bg-theme2 transition text-[11px]">
-      <i class="ph ph-cloud-arrow-up"></i> Sinkronkan Ke Google Sheets
-    </button>
-  </div>
-
+  <!-- LOGIN SECTION -->
   <div id="login-section" class="fixed inset-0 bg-theme1 z-[999] flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 border border-theme5">
       <div class="text-center mb-6">
-        <i class="ph-fill ph-shield-check text-5xl text-theme3 mb-2"></i>
+        <i class="ph-fill ph-shield-check text-5xl text-theme4 mb-2"></i>
         <h2 class="text-2xl font-bold text-theme1">Culvert Inspection</h2>
         <p class="text-gray-500 text-sm">Sistem Inspeksi Culvert Terintegrasi</p>
       </div>
@@ -63,28 +46,24 @@
         <div class="mb-4">
           <label class="block text-sm font-semibold mb-1">Username <span class="text-red-500">*</span></label>
           <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-              <i class="ph ph-user"></i>
-            </span>
-            <input type="text" id="login_username" required autocomplete="username" class="w-full border border-gray-300 rounded pl-10 pr-3 py-2 focus:outline-none focus:border-theme2 font-medium bg-white" placeholder="Username">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="ph ph-user"></i></span>
+            <input type="text" id="login_username" required autocomplete="username" class="w-full border border-gray-300 rounded pl-10 pr-3 py-2 focus:outline-none focus:border-theme2 font-medium bg-white" placeholder="admin / buma / sis / ppa / hauling">
           </div>
         </div>
         <div class="mb-6">
           <label class="block text-sm font-semibold mb-1">Password <span class="text-red-500">*</span></label>
           <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-              <i class="ph ph-lock"></i>
-            </span>
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="ph ph-lock"></i></span>
             <input type="password" id="login_password" required autocomplete="current-password" class="w-full border border-gray-300 rounded pl-10 pr-3 py-2 focus:outline-none focus:border-theme2 font-medium bg-white" placeholder="••••••••">
           </div>
+          <p class="text-[10px] text-gray-400 mt-2">Gunakan password apa saja (min. 4 karakter)</p>
         </div>
-        <button type="submit" class="w-full bg-theme2 hover:bg-theme1 text-white font-bold py-3 px-4 rounded transition shadow tracking-wider uppercase text-sm">
-          <i class="ph ph-sign-in mr-1"></i> MASUK KE SISTEM
-        </button>
+        <button type="submit" class="w-full bg-theme2 hover:bg-theme1 text-white font-bold py-3 px-4 rounded transition shadow tracking-wider uppercase text-sm"><i class="ph ph-sign-in mr-1"></i> MASUK KE SISTEM</button>
       </form>
     </div>
   </div>
 
+  <!-- HEADER -->
   <header class="bg-theme1 text-white shadow-lg sticky top-0 z-40 h-[64px] flex flex-col justify-center">
     <div class="w-full max-w-6xl mx-auto px-4 flex justify-between items-center">
       <div class="flex items-center space-x-2 cursor-pointer" onclick="switchTab('home')">
@@ -93,513 +72,859 @@
       </div>
       <nav class="hidden md:flex space-x-6 items-center">
         <button onclick="switchTab('home')" id="desk-tab-home" class="hover:text-theme4 font-semibold h-[64px] border-b-2 border-transparent transition">Home</button>
-        <button onclick="switchTab('survey')" id="desk-tab-survey" class="hover:text-theme4 font-semibold h-[64px] border-b-2 border-transparent transition hidden">Form Inspeksi</button>
+        <button onclick="switchTab('survey')" id="desk-tab-survey" class="hover:text-theme4 font-semibold h-[64px] border-b-2 border-transparent transition">Form Inspeksi</button>
         <button onclick="switchTab('dashboard')" id="desk-tab-dashboard" class="hover:text-theme4 font-semibold h-[64px] border-b-2 border-transparent transition">Dashboard</button>
         <button onclick="switchTab('map')" id="desk-tab-map" class="hover:text-theme4 font-semibold h-[64px] border-b-2 border-transparent transition">Map</button>
+        <button onclick="switchTab('admin')" id="desk-tab-admin" class="hover:text-theme4 font-semibold h-[64px] border-b-2 border-transparent transition hidden">Admin</button>
       </nav>
       <div class="flex items-center space-x-3">
-        <div id="userInfoDisplay" class="text-xs text-theme4 font-mono bg-black bg-opacity-30 px-3 py-1.5 rounded border border-theme2">Guest</div>
-        <button onclick="logout()" class="bg-red-800 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded transition"><i class="ph ph-sign-out"></i></button>
+        <div id="userInfoDisplay" class="hidden text-xs text-theme4 font-mono mr-2 bg-black bg-opacity-30 px-2 py-1 rounded border border-theme2"></div>
+        <div id="offlineIndicatorMobile" class="hidden h-3 w-3 rounded-full bg-red-500 animate-pulse" title="Offline Mode Aktif"></div>
+        <button onclick="toggleMobileMenu()" class="text-white hover:text-theme4 focus:outline-none p-2 md:hidden"><i class="ph ph-list text-2xl"></i></button>
       </div>
     </div>
   </header>
 
+  <!-- BANNERS -->
+  <div id="offlineBanner" class="hidden bg-red-500 text-white text-xs font-bold px-4 py-2 flex justify-between items-center z-30 relative shadow-md"><span><i class="ph ph-wifi-slash mr-1"></i> Mode Offline Aktif. Gunakan data master yang tersimpan.</span></div>
+  <div id="syncBanner" class="hidden bg-orange-100 text-orange-800 border-b border-orange-200 text-sm font-semibold px-4 py-3 flex justify-between items-center z-30 relative shadow-md">
+    <span><i class="ph ph-cloud-arrow-up mr-2 text-lg"></i> <span id="syncCount">0</span> Data Tersimpan Offline</span>
+    <button onclick="syncOfflineData()" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded shadow text-xs transition">Sinkronisasi</button>
+  </div>
+
+  <!-- MOBILE MENU -->
+  <div id="mobile-menu" class="hidden fixed top-[64px] left-0 w-full bg-theme1 border-t border-theme2 z-50 shadow-xl max-h-[calc(100vh-64px)] overflow-y-auto">
+    <button onclick="switchTab('home'); toggleMobileMenu()" id="mob-tab-home" class="block w-full text-left px-4 py-3 font-semibold text-white hover:bg-theme2 transition">Home</button>
+    <button onclick="switchTab('survey'); toggleMobileMenu()" id="mob-tab-survey" class="block w-full text-left px-4 py-3 font-semibold text-white hover:bg-theme2 transition">Form Inspeksi</button>
+    <button onclick="switchTab('dashboard'); toggleMobileMenu()" id="mob-tab-dashboard" class="block w-full text-left px-4 py-3 font-semibold text-white hover:bg-theme2 transition">Dashboard</button>
+    <button onclick="switchTab('map'); toggleMobileMenu()" id="mob-tab-map" class="block w-full text-left px-4 py-3 font-semibold text-white hover:bg-theme2 transition">Map</button>
+    <button onclick="switchTab('admin'); toggleMobileMenu()" id="mob-tab-admin" class="w-full text-left px-4 py-3 font-semibold text-white hover:bg-theme2 transition hidden">Admin</button>
+    <div class="border-t border-theme2 border-b">
+        <button onclick="syncMasterDataManual(); toggleMobileMenu()" class="block w-full text-left px-4 py-3 font-semibold text-theme4 hover:bg-theme2 transition"><i class="ph ph-arrows-clockwise mr-2"></i>Sync Master Inspektor</button>
+        <button id="installAppBtn" onclick="simulatePWAPrompt(); toggleMobileMenu()" class="hidden w-full text-left px-4 py-3 font-semibold text-theme5 bg-theme2 hover:bg-theme3 hover:text-theme1 transition border-t border-theme2"><i class="ph ph-download-simple mr-2"></i>Install Aplikasi Offline</button>
+    </div>
+    <button onclick="logout()" class="block w-full text-left px-4 py-3 font-semibold text-red-300 hover:bg-theme2 transition">Logout</button>
+  </div>
+
+  <!-- MAIN CONTAINER -->
   <main id="mainContainer" class="max-w-6xl mx-auto px-4 mt-6 pb-10">
     
+    <!-- 1. HOME SECTION -->
     <section id="section-home" class="tab-section hidden">
-      <div class="text-center py-16 bg-white rounded-xl shadow border border-gray-200 p-8">
-        <div class="inline-block p-4 bg-theme5 bg-opacity-40 rounded-full mb-4"><i class="ph-fill ph-house text-6xl text-theme2"></i></div>
-        <h2 class="text-3xl font-bold text-theme1 mb-2">Cloud Database Google Sheets Terkoneksi</h2>
-        <p class="text-gray-500 mb-8 max-w-xl mx-auto" id="homeWelcomeMessage">Menghubungkan data master...</p>
+      <div class="text-center py-12 md:py-20 bg-white rounded-lg border border-gray-100 shadow-sm px-6">
+        <div class="inline-block p-4 bg-theme4 bg-opacity-30 rounded-full mb-4"><i class="ph-fill ph-bounding-box text-6xl text-theme2"></i></div>
+        <h2 class="text-3xl md:text-4xl font-bold text-theme1 mb-4">Selamat Datang di Culvert Monitoring</h2>
+        <p class="text-gray-500 mb-10 max-w-xl mx-auto text-sm md:text-base">Gunakan platform ini untuk inspeksi rutin gorong-gorong (culvert) & saluran air (channel) di seluruh area kontraktor pertambangan secara tersinkronisasi.</p>
         <button onclick="switchTab('survey')" class="bg-theme2 hover:bg-theme1 text-white font-bold py-3 px-6 rounded shadow transition"><i class="ph ph-plus-circle mr-2"></i> Mulai Inspeksi Baru</button>
       </div>
     </section>
 
-    <section id="section-survey" class="tab-section hidden max-w-4xl mx-auto bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-      <div class="bg-theme1 px-6 py-4 text-white flex justify-between items-center">
-        <div>
-          <h2 class="text-lg font-bold">Input Hasil Inspeksi</h2>
-          <p class="text-xs text-theme5">Sinkronisasi Penuh ke Sistem</p>
-        </div>
-        <span class="text-xs font-mono font-bold bg-theme2 px-3 py-1 rounded shadow" id="formScopeBadge">-</span>
+    <!-- 2. FORM INSPEKSI SECTION -->
+    <section id="section-survey" class="tab-section hidden">
+      <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+        <h2 class="text-xl font-bold text-theme1 mb-4 border-l-4 border-theme3 pl-3">Formulir Laporan Inspeksi</h2>
+        <form id="inspectionForm" class="space-y-4" onsubmit="handleFormSubmit(event)">
+          <!-- Blok Metadata -->
+          <div class="bg-gray-50 p-4 rounded border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block text-[11px] font-bold mb-1 uppercase text-theme2">Nama Inspektor <span class="text-red-500">*</span></label>
+              <select id="form_inspector_select" required class="border p-2 w-full rounded focus:outline-none focus:border-theme2 bg-white text-gray-700 font-semibold" onchange="autofillNrp(this.value)">
+                <option value="">-- Pilih Inspektor --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold mb-1 text-gray-400 uppercase">NRP</label>
+              <input type="text" id="form_nrp" readonly class="w-full border bg-gray-100 font-mono text-gray-600 rounded p-2 focus:outline-none" placeholder="Otomatis terisi">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold mb-1 text-theme2 uppercase">Tanggal & Waktu Inspeksi <span class="text-red-500">*</span></label>
+              <input type="datetime-local" id="form_date" required class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-theme2 bg-white">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold mb-1 text-theme2 uppercase">Kondisi Cuaca <span class="text-red-500">*</span></label>
+              <select id="form_weather" required class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-theme2 bg-white font-medium">
+                <option value="Cerah">Cerah</option>
+                <option value="Berawan">Berawan</option>
+                <option value="Hujan">Hujan</option>
+                <option value="Pasca Hujan">Pasca Hujan</option>
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-[11px] font-bold mb-1 text-theme2 uppercase">Participants (Pengawas Tambahan / Anggota Tim)</label>
+              <input type="text" id="form_participants" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-theme2 bg-white" placeholder="Nama-nama anggota, pisahkan dengan koma...">
+            </div>
+          </div>
+
+          <!-- Blok Objek & GPS -->
+          <div class="bg-gray-50 p-4 rounded border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block text-[11px] font-bold mb-1 uppercase text-theme2">Jenis Objek <span class="text-red-500">*</span></label>
+              <select id="form_object_type" required onchange="filterAssetDropdown(this.value)" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-theme2 bg-white font-bold">
+                <option value="culvert">CULVERT (Gorong-gorong)</option>
+                <option value="channel" id="opt_object_channel">CHANNEL (Saluran Air)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold mb-1 uppercase text-theme2">Pilih ID Objek <span class="text-red-500">*</span></label>
+              <select id="sheetObjectSelect" onchange="autofillObjectDetails(this.value)" required class="w-full border-2 border-theme3 rounded p-2 font-bold focus:outline-none bg-white">
+                <option value="">-- Pilih Titik --</option>
+              </select>
+            </div>
+            
+            <!-- Kolom Get Coordinate & Pengisian Manual Lat Long Terpisah -->
+            <div class="md:col-span-2 bg-theme5 bg-opacity-20 p-3 rounded border border-theme4">
+              <div class="flex justify-between items-center mb-2">
+                <label class="block text-xs font-bold text-theme1 uppercase">Koordinat Lokasi (Dapat Diedit Manual)</label>
+                <button type="button" onclick="getLocation()" class="bg-theme3 hover:bg-theme2 text-white font-bold text-[10px] px-2.5 py-1 rounded transition shadow flex items-center gap-1 shrink-0"><i class="ph ph-crosshair font-bold"></i>Get GPS</button>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[10px] text-gray-500 font-semibold uppercase mb-0.5">Latitude</label>
+                  <input type="text" id="form_latitude" class="w-full border border-gray-300 rounded p-2 font-mono text-xs bg-white text-gray-700 focus:outline-none focus:border-theme2" placeholder="-1.23456">
+                </div>
+                <div>
+                  <label class="block text-[10px] text-gray-500 font-semibold uppercase mb-0.5">Longitude</label>
+                  <input type="text" id="form_longitude" class="w-full border border-gray-300 rounded p-2 font-mono text-xs bg-white text-gray-700 focus:outline-none focus:border-theme2" placeholder="116.89012">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Blok Parameter Penilaian Kondisi -->
+          <div class="bg-gray-50 p-4 rounded border border-gray-200 text-xs">
+            <h3 class="text-[11px] font-bold text-theme1 uppercase border-b pb-1.5 mb-3 flex items-center gap-1"><i class="ph ph-gauge"></i> Parameter Penilaian Kondisi</h3>
+            
+            <div id="ews_culvert_fields" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block font-semibold mb-1">Sedimentasi Material (%)</label>
+                <select id="ews_c_sediment" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-theme2 bg-white">
+                  <option value="0.25">&lt;= 25% kapasitas</option>
+                  <option value="0.5">25 - 50% kapasitas</option>
+                  <option value="0.75">50 - 75% kapasitas</option>
+                  <option value="1">75 - 100% kapasitas</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Culvert Rusak (patah/amblas/lepas)</label>
+                <select id="ews_c_structure" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-theme2 bg-white">
+                  <option value="0">Tidak Ada</option>
+                  <option value="1">Ada</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Box Control sebelum inlet</label>
+                <select id="ews_c_box" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-theme2 bg-white">
+                  <option value="0">Tidak Ada</option>
+                  <option value="1">Ada</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="ews_channel_fields" class="hidden">
+              <div class="max-w-xs">
+                <label class="block font-semibold mb-1">Sedimentasi Channel (%)</label>
+                <select id="ews_ch_sediment" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-theme2 bg-white">
+                  <option value="0.25">&lt;= 25%</option>
+                  <option value="0.5">25 - 50%</option>
+                  <option value="0.75">50 - 75%</option>
+                  <option value="1">75 - 100%</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Blok Matriks Kepatuhan (Compliance Check - YA / TIDAK Selector) -->
+          <div class="bg-gray-50 p-4 rounded border border-gray-200 text-xs">
+            <h3 class="text-[11px] font-bold text-theme2 uppercase mb-2 border-b pb-1.5 flex items-center gap-1"><i class="ph ph-check-square"></i> Matriks Kepatuhan (Compliance Check)</h3>
+            <div id="compliance_fields" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-gray-700">
+              <!-- Rendered Dynamically -->
+            </div>
+          </div>
+
+          <!-- Blok Media Upload -->
+          <div class="bg-gray-50 p-4 rounded border border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div>
+              <label class="block font-bold mb-1 uppercase text-theme2">Foto Inlet</label>
+              <input type="file" accept="image/*" id="file_inlet" class="w-full text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[11px] file:font-semibold file:bg-theme5 file:text-theme1 hover:file:bg-theme4">
+            </div>
+            <div>
+              <label class="block font-bold mb-1 uppercase text-theme2">Foto Outlet</label>
+              <input type="file" accept="image/*" id="file_outlet" class="w-full text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[11px] file:font-semibold file:bg-theme5 file:text-theme1 hover:file:bg-theme4">
+            </div>
+            <div>
+              <label class="block font-bold mb-1 uppercase text-theme2">Foto Tambahan</label>
+              <input type="file" accept="image/*" id="file_other" class="w-full text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[11px] file:font-semibold file:bg-theme5 file:text-theme1 hover:file:bg-theme4">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-theme2 hover:bg-theme1 text-white font-bold py-3 rounded shadow transition uppercase tracking-wider text-xs">Kirim Laporan Inspeksi</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 3. DASHBOARD SECTION -->
+    <section id="section-dashboard" class="tab-section hidden">
+      <div class="mb-4 flex flex-col md:flex-row md:justify-between md:items-end">
+        <h2 class="text-lg font-bold text-theme1 border-l-4 border-theme3 pl-3">Dashboard Culvert Inspection</h2>
+      </div>
+      
+      <!-- Info Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-theme1"><h3 class="text-[10px] text-gray-500 font-bold uppercase">Total Culvert</h3><p class="text-2xl font-bold font-mono" id="cardTotal">0</p></div>
+        <div class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-purple-700"><h3 class="text-[10px] text-gray-500 font-bold uppercase">Critical Risk</h3><p class="text-2xl font-bold font-mono text-purple-700" id="cardCritical">0</p></div>
+        <div class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-red-600"><h3 class="text-[10px] text-gray-500 font-bold uppercase">> 30 Hari Belum diinspeksi</h3><p class="text-2xl font-bold font-mono text-red-600" id="cardOverdue">0</p></div>
+        <div class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-rose-600"><h3 class="text-[10px] text-gray-500 font-bold uppercase">Prioritas 1</h3><p class="text-2xl font-bold font-mono text-rose-600" id="cardPrio1">0</p></div>
+      </div>
+      
+      <!-- Charts Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+        <div class="bg-white rounded border border-gray-100 p-3"><h3 class="text-xs font-bold text-center mb-2 text-theme1">Tingkat Risiko</h3><div class="h-40 relative"><canvas id="riskChart"></canvas></div></div>
+        <div class="bg-white rounded border border-gray-100 p-3"><h3 class="text-xs font-bold text-center mb-2 text-theme1">Waktu Terakhir Inspeksi</h3><div class="h-40 relative"><canvas id="timeChart"></canvas></div></div>
+        <div class="bg-white rounded border border-gray-100 p-3"><h3 class="text-xs font-bold text-center mb-2 text-theme1">Prioritas</h3><div class="h-40 relative"><canvas id="prioChart"></canvas></div></div>
       </div>
 
-      <form id="inspectionForm" class="p-6 space-y-6" onsubmit="handleFormSubmit(event)">
+      <!-- Controls & Data Detail Table -->
+      <div class="bg-white rounded border border-gray-100 w-full overflow-hidden shadow-sm">
+        <div class="bg-gray-50 px-3 py-2.5 border-b border-gray-200 flex flex-wrap gap-2 items-center justify-between">
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span class="text-gray-500 font-bold"><i class="ph ph-funnel"></i> Filter:</span>
+            <select onchange="filterDashboardTable()" id="filter-prio" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none">
+              <option value="Semua">-- Semua Prioritas --</option>
+              <option value="Prioritas 1">Prioritas 1</option>
+              <option value="Prioritas 2">Prioritas 2</option>
+            </select>
+            <select onchange="filterDashboardTable()" id="filter-waktu" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none">
+              <option value="Semua">-- Semua Waktu --</option>
+              <option value="Hari Ini">Hari Ini</option>
+              <option value="&lt; 7 Hari">&lt; 7 Hari</option>
+              <option value="&gt; 7 Hari">&gt; 7 Hari</option>
+              <option value="&gt; 30 Hari">&gt; 30 Hari</option>
+              <option value="No Data">No Data</option>
+            </select>
+            <select onchange="filterDashboardTable()" id="filter-risiko" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none">
+              <option value="Semua">-- Semua Risiko --</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+              <option value="No Data">No Data</option>
+            </select>
+          </div>
+          <button onclick="downloadDashboardExcel()" class="text-xs font-semibold px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded transition flex items-center shadow-sm"><i class="ph ph-file-xls mr-1 text-base"></i> Download Excel</button>
+        </div>
         
-        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-bold mb-1 uppercase text-theme2">Nama Inspektor <span class="text-red-500">*</span></label>
-            <input 
-              list="inspector_list" 
-              id="form_inspector_select" 
-              class="border p-2 w-full rounded" 
-              placeholder="Ketik nama inspektor..."
-              oninput="autofillNrp(this.value)"
-            >
-
-            <datalist id="inspector_list"></datalist>
-          </div>
-          <div>
-            <label class="block text-xs font-bold mb-1 text-gray-400">NRP</label>
-            <input type="text" id="form_nrp" readonly class="w-full border bg-gray-100 font-mono text-gray-600 rounded px-3 py-2 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-xs font-bold mb-1 text-theme2">Tanggal Inspeksi <span class="text-red-500">*</span></label>
-            <input type="datetime-local" id="form_date" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-theme2">
-          </div>
-          <div>
-            <label class="block text-xs font-bold mb-1 text-theme2">Kondisi Cuaca <span class="text-red-500">*</span></label>
-            <select id="form_weather" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-theme2 bg-white">
-              <option value="Cerah">Cerah</option>
-              <option value="Berawan">Pasca Hujan</option>
-            </select>
-          </div>
-          <div class="md:col-span-2">
-            <label class="block text-xs font-bold mb-1 text-theme2">Participants (Pengawas Tambahan / Anggota Tim)</label>
-            <input type="text" id="form_participants" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-theme2" placeholder="Nama-nama anggota, pisahkan dengan koma...">
-          </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-white text-[11px] text-gray-500 uppercase tracking-wider border-b">
+                <th class="p-2.5 font-bold">ID Culvert</th>
+                <th class="p-2.5 font-bold">Mitra</th>
+                <th class="p-2.5 font-bold">Tanggal Inspeksi</th>
+                <th class="p-2.5 font-bold">Risk Level</th>
+                <th class="p-2.5 font-bold">Last Check</th>
+                <th class="p-2.5 font-bold">Prioritas</th>
+                <th class="p-2.5 font-bold text-center">Jumlah Line</th>
+                <th class="p-2.5 font-bold text-center">Foto Inlet</th>
+                <th class="p-2.5 font-bold text-center">Foto Outlet</th>
+                <th class="p-2.5 font-bold text-center">Foto Tambahan</th>
+              </tr>
+            </thead>
+            <tbody id="dashboardTableBody" class="text-xs divide-y divide-gray-100 font-medium">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+          <div id="dashTableEmpty" class="hidden p-6 text-center text-gray-400 text-xs">Tidak ada data yang sesuai dengan kombinasi filter.</div>
         </div>
-
-        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-bold mb-1 uppercase text-theme2">Jenis Objek <span class="text-red-500">*</span></label>
-            <select id="form_object_type" required onchange="filterAssetDropdown(this.value)" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-theme2 bg-white font-bold">
-              <option value="culvert">CULVERT (Gorong-gorong)</option>
-              <option value="channel">CHANNEL (Saluran Air)</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-bold mb-1 uppercase text-theme2">Pilih ID Culvert <span class="text-red-500">*</span></label>
-            <select id="sheetObjectSelect" onchange="autofillObjectDetails(this.value)" required class="w-full border-2 border-theme3 rounded px-3 py-2 font-bold focus:outline-none bg-white">
-              <option value="">-- Pilih Titik --</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-bold mb-1 text-gray-400">LATITUDE (WGS84)</label>
-            <input type="text" id="form_lat" readonly class="w-full border bg-gray-100 font-mono text-gray-600 rounded px-3 py-2 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-xs font-bold mb-1 text-gray-400">LONGITUDE (WGS84)</label>
-            <input type="text" id="form_lng" readonly class="w-full border bg-gray-100 font-mono text-gray-600 rounded px-3 py-2 focus:outline-none">
-          </div>
-        </div>
-
-        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-4">
-          <h3 class="text-xs font-bold text-theme1 uppercase border-b pb-2"><i class="ph ph-gauge"></i> Parameter Penilaian Kondisi (Early Warning System)</h3>
-          
-          <div id="ews_culvert_fields" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-xs font-semibold mb-1">Sedimentasi Material (%)</label>
-              <select id="ews_c_sediment" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-theme2 bg-white">
-                <option value="0.25"><= 25%</option>
-                <option value="0.5">25 - 50%</option>
-                <option value="0.75">50 - 75%</option>
-                <option value="1">75 - 100%</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-semibold mb-1">Culvert Rusak</label>
-              <select id="ews_c_structure" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-theme2 bg-white">
-                <option value="0">Tidak</option>
-                <option value="1">Ada</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-semibold mb-1">Box Control</label>
-              <select id="ews_c_box" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-theme2 bg-white">
-                <option value="0">Tidak</option>
-                <option value="1">Ada</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="ews_channel_fields" class="hidden">
-            <div class="max-w-xs">
-              <label class="block text-xs font-semibold mb-1">Sedimentasi Channel (%)</label>
-              <select id="ews_ch_sediment" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-theme2 bg-white">
-                <option value="0.25"><= 25%</option>
-                <option value="0.5">25 - 50%</option>
-                <option value="0.75">50 - 75%</option>
-                <option value="1">75 - 100%</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <h3 class="text-xs font-bold text-theme2 uppercase mb-3 border-b pb-2"><i class="ph ph-check-square"></i> Matriks Kepatuhan (*Compliance Check*)</h3>
-          <div id="compliance_fields" class="space-y-2 text-sm text-gray-700">
-             </div>
-        </div>
-
-        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-xs font-bold mb-1 uppercase text-theme2">Foto Area Inlet</label>
-            <input type="file" accept="image/*" id="file_inlet" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-theme5 file:text-theme1 hover:file:bg-theme4">
-          </div>
-          <div>
-            <label class="block text-xs font-bold mb-1 uppercase text-theme2">Foto Area Outlet</label>
-            <input type="file" accept="image/*" id="file_outlet" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-theme5 file:text-theme1 hover:file:bg-theme4">
-          </div>
-          <div>
-            <label class="block text-xs font-bold mb-1 uppercase text-theme2">Foto Kondisi Lainnya</label>
-            <input type="file" accept="image/*" id="file_other" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-theme5 file:text-theme1 hover:file:bg-theme4">
-          </div>
-        </div>
-
-        <button type="submit" class="w-full bg-theme2 hover:bg-theme1 text-white font-bold py-3.5 rounded shadow transition uppercase tracking-wider text-sm">Kirim & Update Cloud Database</button>
-      </form>
-    </section>
-
-    <section id="section-dashboard" class="tab-section hidden space-y-6">
-      <div class="border-b pb-2">
-        <h2 class="text-xl font-bold text-theme1">DASHBOARD REPORT STATISTIK</h2>
-        <p class="text-xs text-gray-500 font-mono">Real-time status based on integrated sheets</p>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white rounded-xl shadow p-4 border-t-4 border-t-theme1"><h4 class="text-xs font-bold text-gray-400 uppercase">Total Titik Culvert</h4><p class="text-3xl font-bold font-mono mt-1" id="kpiCulvert">0</p></div>
-        <div class="bg-white rounded-xl shadow p-4 border-t-4 border-t-theme3"><h4 class="text-xs font-bold text-gray-400 uppercase">Total Jalur Channel</h4><p class="text-3xl font-bold font-mono mt-1" id="kpiChannel">0</p></div>
-        <div class="bg-white rounded-xl shadow p-4 border-t-4 border-t-theme4"><h4 class="text-xs font-bold text-theme3 uppercase">Inspektor Terdaftar</h4><p class="text-3xl font-bold font-mono mt-1 text-theme2" id="kpiInpsektor">0</p></div>
       </div>
     </section>
 
-    <section id="section-map" class="tab-section hidden absolute top-[64px] left-0 w-full h-[calc(100vh-64px)] z-0">
-      <div id="mapWorkspace" class="w-full h-full bg-gray-200"></div>
+    <!-- 4. ADMIN HOOK SECTION -->
+    <section id="section-admin" class="tab-section hidden">
+      <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-lg mx-auto shadow-sm text-xs">
+        <div class="text-center mb-6">
+          <i class="ph ph-lock-keyhole text-4xl text-theme2 mb-2"></i>
+          <h3 class="font-bold text-sm text-theme1">Otoritas Panel Master Admin</h3>
+          <p class="text-gray-500 mt-1">Gunakan tombol di bawah untuk mengelola data master inspektor lapangan, ID culvert baru, dan channel line.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+          <button onclick="openMasterModal('inspector')" class="p-3 bg-gray-50 hover:bg-theme5 hover:bg-opacity-40 border border-gray-200 rounded text-left transition">
+            <h4 class="font-bold text-theme1"><i class="ph ph-user-plus mr-1"></i> Tambah Inspector</h4>
+            <p class="text-[10px] text-gray-400 mt-1">Mendaftarkan nama surveyor & NRP baru.</p>
+          </button>
+          <button onclick="openMasterModal('culvert')" class="p-3 bg-gray-50 hover:bg-theme5 hover:bg-opacity-40 border border-gray-200 rounded text-left transition">
+            <h4 class="font-bold text-theme1"><i class="ph ph-plus-circle mr-1"></i> Tambah ID Culvert</h4>
+            <p class="text-[10px] text-gray-400 mt-1">Menambah kode titik, area, & status prioritas.</p>
+          </button>
+          <button onclick="openMasterModal('channel')" class="p-3 bg-gray-50 hover:bg-theme5 hover:bg-opacity-40 border border-gray-200 rounded text-left transition md:col-span-2">
+            <h4 class="font-bold text-theme1"><i class="ph ph-git-branch mr-1"></i> Hubungkan Channel Line</h4>
+            <p class="text-[10px] text-gray-400 mt-1">Mendaftarkan channel line sub-struktur ke ID Culvert.</p>
+          </button>
+        </div>
+        
+        <!-- Live Admin Data Quick View -->
+        <div class="border-t border-gray-100 pt-4">
+          <h4 class="font-bold text-theme1 mb-2 uppercase text-[10px] text-gray-400 tracking-wider">Registered Inspectors & Culverts</h4>
+          <div class="max-h-40 overflow-y-auto space-y-1 bg-gray-50 p-2 rounded border border-gray-100 font-mono text-[10px]" id="adminQuickView">
+            <!-- Loaded via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. MAP SECTION -->
+    <section id="section-map" class="tab-section hidden absolute top-[64px] left-0 w-full z-0 h-[calc(100vh-64px)] bg-gray-200">
+      <div id="mapContainer" class="w-full h-full z-0"></div>
+      
+      <!-- Admin Contractor Filter -->
+      <div id="filter-container-map" class="hidden absolute top-4 left-14 z-[400] bg-white p-2 rounded shadow-lg border border-gray-200 text-xs font-semibold flex flex-col md:flex-row gap-2">
+        <span class="text-gray-500 flex items-center pr-2 md:border-r border-gray-200"><i class="ph ph-funnel mr-1"></i> Contractor:</span>
+        <div class="flex gap-1" id="mapContractorFilters">
+          <button onclick="setMitraMapFilter('Semua')" id="flt-map-Semua" class="px-2 py-0.5 bg-theme2 text-white rounded transition text-[11px]">Semua</button>
+          <button onclick="setMitraMapFilter('BUMA')" id="flt-map-BUMA" class="px-2 py-0.5 bg-white text-theme1 border border-theme2 rounded transition text-[11px]">BUMA</button>
+          <button onclick="setMitraMapFilter('SIS')" id="flt-map-SIS" class="px-2 py-0.5 bg-white text-theme1 border border-theme2 rounded transition text-[11px]">SIS</button>
+          <button onclick="setMitraMapFilter('PPA')" id="flt-map-PPA" class="px-2 py-0.5 bg-white text-theme1 border border-theme2 rounded transition text-[11px]">PPA</button>
+          <button onclick="setMitraMapFilter('HAULING')" id="flt-map-HAULING" class="px-2 py-0.5 bg-white text-theme1 border border-theme2 rounded transition text-[11px]">HAULING</button>
+        </div>
+      </div>
+
+      <!-- Map Legends -->
+      <div class="absolute top-4 right-4 z-[400] bg-white p-2.5 rounded shadow-lg border border-gray-200 text-[11px] font-semibold flex flex-col gap-3 max-w-[180px] max-h-[calc(100vh-100px)] overflow-y-auto shadow-2xl">
+        <div>
+          <div class="text-theme1 border-b border-gray-200 pb-1 mb-1.5 flex items-center gap-1"><i class="ph ph-calendar"></i> Waktu Inspeksi</div>
+          <div class="flex items-center mb-1"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-blue-500"></span> Hari Ini</div>
+          <div class="flex items-center mb-1"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-green-500"></span> &lt; 7 Hari</div>
+          <div class="flex items-center mb-1"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-yellow-500"></span> &gt; 7 Hari</div>
+          <div class="flex items-center mb-1"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-red-600"></span> &gt; 30 Hari</div>
+          <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-gray-400"></span> No Data</div>
+        </div>
+        <div>
+          <div class="text-theme1 border-b border-gray-200 pb-1 mb-1.5 flex items-center gap-1"><i class="ph ph-warning-octagon"></i> Tingkat Risiko</div>
+          <div class="flex items-center mb-1"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-emerald-600"></span> Low</div>
+          <div class="flex items-center mb-1"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-amber-500"></span> Medium</div>
+          <div class="flex items-center mb-1"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-orange-600"></span> High</div>
+          <div class="flex items-center mb-1"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-purple-700"></span> Critical</div>
+          <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-gray-400"></span> No Data</div>
+        </div>
+        <div>
+          <div class="text-theme1 border-b border-gray-200 pb-1 mb-1.5 flex items-center gap-1"><i class="ph ph-star"></i> Prioritas</div>
+          <div class="flex items-center mb-1"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-rose-600"></span> Prioritas 1</div>
+          <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-cyan-600"></span> Prioritas 2</div>
+        </div>
+      </div>
     </section>
 
   </main>
 
-  <script>
-    // MASUKKAN URL DEPLOY WEB APP APPS SCRIPT BARU ANDA DI SINI
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxSWyy1bnWfRZGLI4eKMIY8GlSrH9X99H5qX5hbIqFlit14qVoCmIaIBKTNluh_JpBj/exec'; 
-    
-    let currentRole = null;
-    let mitraType = 'mining'; // Default: 'hauling' untuk Adaro, 'mining' untuk BUMA/SIS/PPA
-    let dbMaster = { inspektor: [], culvert: [], channel: [] }; 
-    let globalMap = null;
-
-    const OFFLINE_KEY = "gradebox_offline_data";
-    const MASTER_CACHE_KEY = "gradebox_master_cache";
-
-    // Format Tanggal Otomatis ke input form
-    window.addEventListener('DOMContentLoaded', () => {
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      document.getElementById('form_date').value = now.toISOString().slice(0, 16);
-    });
-
-    function checkNetworkStatus() {
-      const offlineBanner = document.getElementById('offlineBanner');
-      if (navigator.onLine) {
-        if(offlineBanner) offlineBanner.classList.add('hidden');
-        checkPendingOfflineData();
-      } else {
-        if(offlineBanner) offlineBanner.classList.remove('hidden');
-      }
-    }
-    window.addEventListener('online', checkNetworkStatus);
-    window.addEventListener('offline', checkNetworkStatus);
-
-    function handleLogin(e) {
-      e.preventDefault();
-      const userVal = document.getElementById('login_username').value.trim();
-      const passVal = document.getElementById('login_password').value;
-
-      let roleVal = null;
-      if (userVal === "adaroculvert" && passVal === "adaro$123") { roleVal = "ADARO INDONESIA"; mitraType = 'hauling'; }
-      else if (userVal === "bumaculvert" && passVal === "buma@123") { roleVal = "BUMA"; mitraType = 'mining'; }
-      else if (userVal === "sisculvert" && passVal === "sis!123") { roleVal = "SIS"; mitraType = 'mining'; }
-      else if (userVal === "ppaculvert" && passVal === "ppa#123") { roleVal = "PPA"; mitraType = 'mining'; }
-      else if (userVal === "admin" && passVal === "admin1234!!!") { roleVal = "ADMIN"; mitraType = 'admin'; }
-
-      if (!roleVal) {
-        Swal.fire({ title: 'Login Gagal!', text: 'Username/Password salah.', icon: 'error', confirmButtonColor: '#8B0000' });
-        return;
-      }
-
-      currentRole = roleVal;
-      document.getElementById('login-section').classList.add('hidden');
-      document.body.classList.remove('no-scroll');
-      document.getElementById('userInfoDisplay').innerText = `USER: ${userVal.toUpperCase()}`;
-      document.getElementById('roleBadge').innerText = currentRole;
-
-      if (currentRole === 'ADMIN') {
-        document.getElementById('desk-tab-survey').classList.add('hidden');
-      } else {
-        document.getElementById('desk-tab-survey').classList.remove('hidden');
-        document.getElementById('formScopeBadge').innerText = currentRole;
-      }
-
-      setObjectTypeForRole();
-      fetchDataFromSheets();
-      switchTab('home');
-    }
-
-    function setObjectTypeForRole() {
-      const objectTypeSelect = document.getElementById('form_object_type');
-      if (!objectTypeSelect) return;
-
-      if (mitraType === 'hauling') {
-        objectTypeSelect.value = 'culvert';
-        const channelOption = objectTypeSelect.querySelector('option[value="channel"]');
-        if (channelOption) channelOption.style.display = 'none';
-        filterAssetDropdown('culvert');
-      } else {
-        const channelOption = objectTypeSelect.querySelector('option[value="channel"]');
-        if (channelOption) channelOption.style.display = 'block';
-      }
-    }
-
-    function fetchDataFromSheets() {
-    checkNetworkStatus();
-    Swal.fire({ 
-      title: 'Sinkronisasi...', 
-      text: 'Memuat data dari Google Sheets via JSONP...', 
-      allowOutsideClick: false, 
-      didOpen: () => { Swal.showLoading(); } 
-    });
-
-    // Jika kondisi offline, langsung paksa pakai cache lokal jika ada
-    if (!navigator.onLine) {
-      loadCachedMasterData();
-      return;
-    }
-
-    // Nama fungsi jembatan global untuk menerima data dari Google
-    const callbackName = 'jsonpCallback_' + Math.round(Math.random() * 1000000);
-    
-    // Daftarkan fungsi ke jendela browser global (window)
-    window[callbackName] = function(data) {
-      try {
-        dbMaster = data;
-        localStorage.setItem(MASTER_CACHE_KEY, JSON.stringify(dbMaster));
-        
-        // Lanjutkan eksekusi UI form
-        document.getElementById('homeWelcomeMessage').innerText = `Koneksi Terjaga. Sektor ${currentRole} Siap Bekerja.`;
-        populateInspectorSelect();
-        filterAssetDropdown(document.getElementById('form_object_type').value);
-        updateDashboardKPI();
-        updateOfflineUI();
-        
-        Swal.close();
-      } catch (e) {
-        console.error("Gagal memproses data JSONP:", e);
-        loadCachedMasterData();
-      } finally {
-        // Bersihkan sisa tag skrip yang dibuat demi performa memory
-        delete window[callbackName];
-        const scriptTag = document.getElementById(callbackName);
-        if (scriptTag) scriptTag.remove();
-      }
-    };
-
-    // Buat element script secara dinamis untuk menembus proteksi CORS
-    const script = document.createElement('script');
-    script.id = callbackName;
-    script.src = `${WEB_APP_URL}?action=getMasterData&callback=${callbackName}`;
-    
-    // Penanganan jika skrip gagal dimuat (misal server google down/timeout)
-    script.onerror = function() {
-      console.error("JSONP Script load failed.");
-      loadCachedMasterData();
-      delete window[callbackName];
-      script.remove();
-    };
-
-    document.body.appendChild(script);
-  }
-
-  // Fungsi pembantu jika request gagal/offline agar kode tidak duplikat
-  function loadCachedMasterData() {
-    const cached = localStorage.getItem(MASTER_CACHE_KEY);
-    if (cached) {
-      dbMaster = JSON.parse(cached);
-      Swal.fire({ title: 'Mode Offline Aktif', text: 'Menggunakan data cache lokal terakhir.', icon: 'info' });
-      document.getElementById('homeWelcomeMessage').innerText = `Koneksi Terjaga (Offline). Sektor ${currentRole} Siap Bekerja.`;
-      populateInspectorSelect();
-      filterAssetDropdown(document.getElementById('form_object_type').value);
-      updateDashboardKPI();
-      updateOfflineUI();
-    } else {
-      Swal.fire({
-        title: 'Koneksi Gagal!',
-        text: 'Wajib online di startup pertama untuk memvalidasi Google Sheets.',
-        icon: 'error',
-        confirmButtonText: 'Reload'
-      }).then(() => logout());
-    }
-}
-
-function populateInspectorSelect() {
-  const datalist = document.getElementById('inspector_list');
-  if (!datalist) return;
-  datalist.innerHTML = ''; // Bersihkan data lama
-
-  const inspectors = Array.isArray(dbMaster.inspektor) ? dbMaster.inspektor : [];
-  
-  inspectors.forEach(item => {
-    const name = item.nama || item.name || item.inspector || item.Nama || item['Nama Inspector'];
-    const perusahaan = item.perusahaan || item.Perusahaan || item.mitra || item.sektor;
-
-    if (!name) return;
-
-    // Filter tetap berjalan sesuai dengan akun login (BUMA hanya muncul BUMA)
-    if (currentRole === 'ADMIN' || (perusahaan && perusahaan.toUpperCase() === currentRole.toUpperCase())) {
-      // Buat element option khusus untuk datalist HTML5
-      const option = document.createElement('option');
-      option.value = name; // Ini yang akan muncul saat diketik dan dipilih
-      datalist.appendChild(option);
-    }
-  });
-}
-
-    function filterAssetDropdown(type) {
-      const assetSelect = document.getElementById('sheetObjectSelect');
-      assetSelect.innerHTML = '<option value="">-- Pilih Titik --</option>';
-
-      const ewsCulvert = document.getElementById('ews_culvert_fields');
-      const ewsChannel = document.getElementById('ews_channel_fields');
-
-      if (type === 'culvert') {
-        ewsCulvert.classList.remove('hidden');
-        ewsChannel.classList.add('hidden');
-        dbMaster.culvert.forEach(c => {
-          if (currentRole === 'ADMIN' || c.mitra === currentRole) {
-            assetSelect.innerHTML += `<option value="${c.id}">${c.id}</option>`;
-          }
-        });
-      } else {
-        ewsCulvert.classList.add('hidden');
-        ewsChannel.classList.remove('hidden');
-        dbMaster.channel.forEach(ch => {
-          if (currentRole === 'ADMIN' || ch.lokasi === currentRole) {
-            assetSelect.innerHTML += `<option value="${ch.id}">${ch.id}</option>`;
-          }
-        });
-      }
-      renderComplianceFields(type);
-    }
-
-function autofillNrp(nama) {
-  // Cari data inspektor yang namanya sama persis dengan yang diketik/dipilih
-  const found = dbMaster.inspektor.find(i => i.nama === nama);
-  
-  // Jika ketemu, masukkan NRP-nya ke form. Jika belum selesai mengetik, kosongkan dulu.
-  document.getElementById('form_nrp').value = found ? found.nrp : "";
-}
-
-    function autofillObjectDetails(id) {
-      if (!id) {
-        document.getElementById('form_lat').value = "";
-        document.getElementById('form_lng').value = "";
-        return;
-      }
-      const type = document.getElementById('form_object_type').value;
-      if (type === 'culvert') {
-        const found = dbMaster.culvert.find(c => c.id === id);
-        document.getElementById('form_lat').value = found ? found.lat : "";
-        document.getElementById('form_lng').value = found ? found.lng : "";
-      } else {
-        document.getElementById('form_lat').value = "N/A";
-        document.getElementById('form_lng').value = "N/A";
-      }
-    }
-
-    function renderComplianceFields(type) {
-  const wrapper = document.getElementById('compliance_fields');
-  wrapper.innerHTML = "";
-
-  let fields = [];
-
-  // 1. Skema Hauling Adaro (6 Indikator - Hanya untuk Culvert)
-  if (mitraType === 'hauling') {
-    fields = [
-      { key: "culvertPenyok", text: "Penyok pada culvert" },
-      { key: "culvertKeropos", text: "Culvert keropos" },
-      { key: "culvertKendaliErosi", text: "Penahan erosi di outlet" },
-      { key: "culvertInfoLocation", text: "Informasi Lokasi Culvert" },
-      { key: "culvertInfoJmlLine", text: "Informasi jumlah Line" },
-      { key: "culvertIfrasRambu", text: "Rambu keselamatan / penanda bahaya terpasang" }
-    ];
-  } 
-  // 2. Skema Mining Utama (BUMA, SIS, PPA)
-  else {
-    if (type === 'culvert') {
-      fields = [
-        { key: "culvertPenyok", text: "Kondisi struktur pipa baja tidak penyok" },
-        { key: "culvertKeropos", text: "Material dinding tidak keropos" },
-        { key: "culvertKendaliErosi", text: "Tersedia dinding kendali erosi" },
-        { key: "culvertInfoIDCulvert", text: "ID Culvert terpasang di lapangan" },
-        { key: "culvertInfoJmlLine", text: "Informasi jumlah line tertera" },
-        { key: "culvertInfoDiameter", text: "Informasi dimensi diameter pipa jelas" },
-        { key: "culvertTglMaintenance", text: "Informasi tanggal maintenance berkala terpasang" },
-        { key: "culvertInfoPIC", text: "Papan nama PIC penanggung jawab sektor ada" },
-        { key: "culvertInfoLinkQRCode", text: "QR Code Compliance Checklist aktif" },
-        { key: "culvertIfrasParkir", text: "Tersedia sarana area parkir sarana inspeksi" },
-        { key: "culvertIfrasVisible", text: "Posisi aset terlihat jelas (Visible)" },
-        { key: "culvertIfrasAccess", text: "Akses menuju inlet/outlet aman dilalui" },
-        { key: "culvertIfrasRambu", text: "Rambu keselamatan penanda bahaya terpasang" }
-      ];
-    } else {
-      fields = [{ key: "channelKendaliErosi", text: "Terdapat Fasilitas Kendali Erosi Channel" }];
-    }
-  }
-
-  // Generasi elemen HTML berbentuk Radio Button sesuai Gambar input lapangan
-  fields.forEach(f => {
-    wrapper.innerHTML += `
-      <div class="bg-white rounded p-3 border mb-2">
-        <label class="block font-medium text-gray-700 mb-2">${f.text}</label>
-        <div class="flex gap-4">
-          <label class="flex items-center gap-2 cursor-pointer text-sm">
-            <input type="radio" name="comp_${f.key}" value="0" checked class="w-4 h-4 text-red-600">
-            Tidak ada / Sesuai Standar
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer text-sm">
-            <input type="radio" name="comp_${f.key}" value="1" class="w-4 h-4 text-red-600">
-            Ada (Kerusakan/Temuan)
-          </label>
-        </div>
+  <!-- MODAL: MANAGEMENT CRUD (ADMIN ONLY) -->
+  <div id="modalMgmt" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-60 flex items-center justify-center p-3">
+    <div class="bg-white rounded border border-gray-200 shadow-2xl w-full max-w-sm flex flex-col overflow-hidden text-xs">
+      <div class="bg-[#1B4332] text-white px-4 py-2.5 flex justify-between items-center">
+        <h3 class="font-bold text-sm"><i class="ph ph-gear-six mr-1.5 text-emerald-400"></i>Form Master Panel</h3>
+        <button type="button" onclick="closeMgmtModal()" class="text-gray-300 hover:text-white focus:outline-none"><i class="ph ph-x text-xl"></i></button>
       </div>
-    `;
-  });
-}
+      
+      <form id="mgmtForm" class="p-4 flex flex-col gap-3.5" onsubmit="saveMgmt(event)">
+        <div>
+          <label class="block text-gray-500 font-bold mb-1 uppercase text-[10px]">Pilih Kategori Data:</label>
+          <select id="mgmt_type" onchange="toggleMgmtFields(this.value)" class="w-full bg-gray-50 border border-gray-300 rounded px-2 py-1.5 font-semibold text-gray-700 focus:outline-none focus:border-[#1B4332]">
+            <option value="inspector">Tambah Nama Inspector</option>
+            <option value="culvert">Tambah ID Culvert Baru</option>
+            <option value="channel">Tambah Channel Line</option>
+          </select>
+        </div>
 
-    // Mengubah File Gambar ke String Base64 secara Asynchronous
-    function toBase64(file) {
-      if (!file) return Promise.resolve("");
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = error => reject(error);
+        <div id="mgmt_inputs" class="space-y-3 pt-2 border-t border-gray-100">
+          <!-- Field Group: Inspector -->
+          <div id="field-group-inspector" class="mgmt-field-group space-y-2">
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1">Nama Inspector:</label>
+              <input type="text" id="ins_nama" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-[#1B4332]" placeholder="Contoh: John Doe">
+            </div>
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1">NRP:</label>
+              <input type="text" id="ins_nrp" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-[#1B4332]" placeholder="Contoh: 1245023">
+            </div>
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1">Mitra / Kontraktor:</label>
+              <select id="ins_mitra" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none bg-white">
+                <option value="BUMA">BUMA</option>
+                <option value="SIS">SIS</option>
+                <option value="PPA">PPA</option>
+                <option value="HAULING">HAULING</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Field Group: Culvert -->
+          <div id="field-group-culvert" class="mgmt-field-group space-y-2 hidden">
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1">ID Culvert Baru:</label>
+              <input type="text" id="clv_id" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-[#1B4332]" placeholder="Contoh: CV-PIT-11">
+            </div>
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1">Lokasi / Area:</label>
+              <input type="text" id="clv_lokasi" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none" placeholder="Contoh: KM 12 Pit Barat">
+            </div>
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1">Prioritas:</label>
+              <select id="clv_priority" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none bg-white">
+                <option value="Prioritas 1">Prioritas 1</option>
+                <option value="Prioritas 2">Prioritas 2</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1">Kontraktor Penanggung Jawab:</label>
+              <select id="clv_mitra" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none bg-white">
+                <option value="BUMA">BUMA</option>
+                <option value="SIS">SIS</option>
+                <option value="PPA">PPA</option>
+                <option value="HAULING">HAULING</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Field Group: Channel -->
+          <div id="field-group-channel" class="mgmt-field-group space-y-2 hidden">
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1">ID Culvert Target:</label>
+              <select id="chn_culvert_id" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none bg-white">
+                <!-- Loaded Dynamically -->
+              </select>
+            </div>
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1">Nama/Nomor Channel (Line):</label>
+              <input type="number" id="chn_line" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none" placeholder="Contoh: 1, 2, 3">
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-gray-200 flex justify-end gap-2">
+          <button type="button" onclick="closeMgmtModal()" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded font-semibold hover:bg-gray-200 transition">Batal</button>
+          <button type="submit" id="btnSaveMgmt" class="px-4 py-1.5 bg-[#1B4332] text-white rounded font-bold hover:bg-opacity-90 transition flex items-center shadow"><i class="ph ph-floppy-disk mr-1"></i> Simpan Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN SCRIPT (Logic & Google Apps Script Integrated Engine) -->
+  <script>
+    // Google Apps Script Web App API Endpoint
+    const API_URL = "https://script.google.com/macros/s/AKfycbzAb12Zk7OgRd2SC8WseZSVDy84mkAmpioFHrWKhMCQNTQKOsXJ-mexRag-0jvC-Z8G/exec";
+
+    // Global App State (Initially empty, loaded on API readMaster)
+    let state = {
+      inspectors: JSON.parse(localStorage.getItem('clv_inspectors')) || [],
+      culverts: JSON.parse(localStorage.getItem('clv_culverts')) || [],
+      channels: JSON.parse(localStorage.getItem('clv_channels')) || [],
+      inspections: JSON.parse(localStorage.getItem('clv_inspections')) || [],
+      offlineInspections: JSON.parse(localStorage.getItem('clv_offline_inspections')) || [],
+      user: null,
+      activeTab: 'home',
+      mapFilterContractor: 'Semua',
+      charts: {}
+    };
+
+    let map = null;
+    let mapMarkers = [];
+
+    // Save state helpers
+    function saveStateToStorage() {
+      localStorage.setItem('clv_inspectors', JSON.stringify(state.inspectors));
+      localStorage.setItem('clv_culverts', JSON.stringify(state.culverts));
+      localStorage.setItem('clv_channels', JSON.stringify(state.channels));
+      localStorage.setItem('clv_inspections', JSON.stringify(state.inspections));
+      localStorage.setItem('clv_offline_inspections', JSON.stringify(state.offlineInspections));
+    }
+
+    // Fetch master database sheets from Apps Script API
+    async function loadSheetsAPIData() {
+      try {
+        const response = await fetch(`${API_URL}?action=readMaster`, {
+          method: 'GET',
+          redirect: 'follow'
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result) {
+            // 1. Map inspectors: Name (Col A), NRP (Col B), Mitra (Col C)
+            // standardizing "ADARO INDONESIA" into frontend role representation "HAULING"
+            if (result.inspektor) {
+              state.inspectors = result.inspektor.map(row => {
+                let comp = (row.Perusahaan || row.perusahaan || row.PERUSAHAAN || '').trim().toUpperCase();
+                if (comp === 'ADARO INDONESIA') comp = 'HAULING';
+                return {
+                  name: row.NAMA || row.Nama || row.nama || '',
+                  nrp: row.NRP || row.nrp || '',
+                  contractor: comp
+                };
+              });
+            }
+
+            // 2. Map culverts: ID (Col A), Mitra (Col F)
+            if (result.culvert) {
+              state.culverts = result.culvert.map(row => {
+                let comp = (row.MITRA || row.mitra || row.Mitra || row.Perusahaan || '').trim().toUpperCase();
+                if (comp === 'ADARO INDONESIA') comp = 'HAULING';
+                return {
+                  id: row.ID_CULVERT || row.id_culvert || row.ID || row.id || '',
+                  location: row.LOKASI || row.lokasi || row.Location || 'KM Lokasi',
+                  contractor: comp,
+                  coordinates: [parseFloat(row.LATITUDE || row.latitude) || -1.23, parseFloat(row.LONGITUDE || row.longitude) || 116.89],
+                  priority: row.PRIORITAS || row.prioritas || 'Prioritas 2'
+                };
+              });
+            }
+
+            // 3. Map channels: ID Channel (Col A), Perusahaan (Col B)
+            if (result.channel) {
+              state.channels = result.channel.map(row => {
+                let comp = (row.LOKASI || row.lokasi || row.Perusahaan || row.Mitra || row.mitra || '').trim().toUpperCase();
+                if (comp === 'ADARO INDONESIA') comp = 'HAULING';
+                return {
+                  id: row.ID_Channel || row.id_channel || row['ID Channel'] || '',
+                  contractor: comp
+                };
+              });
+            }
+            saveStateToStorage();
+            console.log("Database Google Sheets sukses tersinkronisasi.");
+          }
+        }
+      } catch (error) {
+        console.error("Gagal menghubungi web app Google Apps Script.", error);
+      }
+    }
+
+    // Prefill DateTime Input
+    function prefillCurrentDateTime() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('form_date').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    // Dynamic Compliance Fields Matrix
+    function renderComplianceFields(type) {
+      const wrapper = document.getElementById('compliance_fields');
+      wrapper.innerHTML = "";
+
+      let fields = [];
+      const currentRole = state.user ? state.user.contractor.toLowerCase() : 'buma';
+      const mitraType = currentRole; // buma, hauling, ppa, sis
+
+      // 1. Skema Hauling Adaro (6 Indikator - Hanya untuk Culvert)
+      if (mitraType === 'hauling') {
+        fields = [
+          { key: "culvertPenyok", text: "Penyok di culvert" },
+          { key: "culvertKeropos", text: "Culvert keropos" },
+          { key: "culvertKendaliErosi", text: "Penahan erosi di outlet" },
+          { key: "culvertInfoLocation", text: "Informasi Lokasi Culvert" },
+          { key: "culvertInfoJmlLine", text: "Informasi jumlah Line" },
+          { key: "culvertIfrasRambu", text: "Rambu penanda lokasi" }
+        ];
+      } 
+      // 2. Skema Mining Utama (BUMA, SIS, PPA, atau Admin)
+      else {
+        if (type === 'culvert') {
+          fields = [
+            { key: "culvertPenyok", text: "Penyok di culvert" },
+            { key: "culvertKeropos", text: "Culvert keropos" },
+            { key: "culvertKendaliErosi", text: "Penahan erosi di outlet" },
+            { key: "culvertInfoIDCulvert", text: "Informasi ID Culvert dan Nama Jalan" },
+            { key: "culvertInfoJmlLine", text: "Informasi jumlah Line" },
+            { key: "culvertInfoDiameter", text: "Informasi diameter culvert" },
+            { key: "culvertTglMaintenance", text: "Informasi Tanggal/jadwal maintenance" },
+            { key: "culvertInfoPIC", text: "Informasi PIC/penanggung jawab culvert" },
+            { key: "culvertInfoLinkQRCode", text: "QR Code link info detail culvert" },
+            { key: "culvertIfrasParkir", text: "Tersedia area parkir sarana inspeksi" },
+            { key: "culvertIfrasVisible", text: "Area untuk melihat obyek inspeksi dengan jelas dan aman" },
+            { key: "culvertIfrasAccess", text: "Kemudahan akses (tangga, foot step, dsb)" },
+            { key: "culvertIfrasRambu", text: "Rambu penanda posisi culvert" }
+          ];
+        } else {
+          fields = [{ key: "channelKendaliErosi", text: "Sarana pengendalian erosi di channel" }];
+        }
+      }
+
+      fields.forEach((field, index) => {
+        wrapper.innerHTML += `
+          <div class="flex items-center justify-between bg-white p-2.5 rounded border border-gray-200 shadow-sm transition hover:shadow-md">
+            <span class="font-semibold text-gray-700 text-[11px] leading-tight">${index + 1}. ${field.text}</span>
+            <div class="flex items-center gap-1 shrink-0 ml-2">
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="radio" name="${field.key}" value="Ada" checked class="sr-only peer">
+                <span class="px-3 py-1 bg-gray-100 text-gray-400 peer-checked:bg-emerald-600 peer-checked:text-white rounded text-[10px] font-bold transition">YA</span>
+              </label>
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="radio" name="${field.key}" value="Tidak Ada" class="sr-only peer">
+                <span class="px-3 py-1 bg-gray-100 text-gray-400 peer-checked:bg-rose-600 peer-checked:text-white rounded text-[10px] font-bold transition">TIDAK</span>
+              </label>
+            </div>
+          </div>
+        `;
       });
     }
 
+    // Auth Engine
+    async function handleLogin(e) {
+      e.preventDefault();
+      const userVal = document.getElementById('login_username').value.trim().toLowerCase();
+      const passVal = document.getElementById('login_password').value;
+
+      if (passVal.length < 4) {
+        Swal.fire({ icon: 'error', title: 'Password tidak sah', text: 'Password minimal 4 karakter!' });
+        return;
+      }
+
+      let role = 'inspector';
+      let contractor = 'Semua';
+
+      if (userVal === 'admin') {
+        role = 'admin';
+        contractor = 'Semua';
+      } else if (['buma', 'sis', 'ppa', 'hauling'].includes(userVal)) {
+        role = 'inspector';
+        contractor = userVal.toUpperCase();
+      } else {
+        Swal.fire({ icon: 'warning', title: 'User tidak dikenal', text: 'Menggunakan profil tamu / Inspektor Umum.' });
+        role = 'inspector';
+        contractor = 'BUMA';
+      }
+
+      state.user = { username: userVal, role, contractor };
+      
+      document.getElementById('login-section').classList.add('hidden');
+      document.body.classList.remove('no-scroll');
+      document.getElementById('roleBadge').innerText = role === 'admin' ? 'ADMIN' : contractor;
+      
+      const userDisplay = document.getElementById('userInfoDisplay');
+      userDisplay.innerText = `${userVal.toUpperCase()} [${role.toUpperCase()}]`;
+      userDisplay.classList.remove('hidden');
+
+      // Object Type filtering based on role
+      const optChannel = document.getElementById('opt_object_channel');
+      const objectTypeSelect = document.getElementById('form_object_type');
+      if (contractor === 'HAULING') {
+        optChannel.style.display = 'none';
+        objectTypeSelect.value = 'culvert';
+      } else {
+        optChannel.style.display = 'block';
+      }
+
+      // Navigation visibility
+      if (role === 'admin') {
+        document.getElementById('desk-tab-admin').classList.remove('hidden');
+        document.getElementById('mob-tab-admin').classList.remove('hidden');
+        document.getElementById('filter-container-map').classList.remove('hidden');
+      } else {
+        document.getElementById('desk-tab-admin').classList.add('hidden');
+        document.getElementById('mob-tab-admin').classList.add('hidden');
+        document.getElementById('filter-container-map').classList.add('hidden');
+        state.mapFilterContractor = contractor;
+      }
+
+      // Force-Sync Google Sheets API Data on login (No statics fallback allowed)
+      Swal.fire({
+        title: 'Sinkronisasi Sistem',
+        text: 'Mengunduh database terbaru langsung dari Google Sheets...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      await loadSheetsAPIData();
+      
+      Swal.close();
+
+      renderDatalists();
+      filterAssetDropdown(objectTypeSelect.value);
+      prefillCurrentDateTime();
+      syncOfflineBanners();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Login Berhasil',
+        text: `Selamat datang di CULVERT INSPECTION, ${userVal.toUpperCase()}`,
+        timer: 1500,
+        showConfirmButton: false
+      });
+
+      switchTab('home');
+    }
+
+    function logout() {
+      state.user = null;
+      document.getElementById('login-section').classList.remove('hidden');
+      document.body.classList.add('no-scroll');
+      document.getElementById('login_username').value = '';
+      document.getElementById('login_password').value = '';
+      toggleMobileMenu();
+    }
+
+    // Dynamic Dropdowns Population
+    function renderDatalists() {
+      const select = document.getElementById('form_inspector_select');
+      select.innerHTML = '<option value="">-- Pilih Inspektor --</option>';
+      
+      const currentContractor = state.user ? state.user.contractor : 'Semua';
+      const filtered = state.inspectors.filter(ins => currentContractor === 'Semua' || ins.contractor === currentContractor);
+
+      filtered.forEach(ins => {
+        const option = document.createElement('option');
+        option.value = ins.name;
+        option.innerText = `${ins.name} [${ins.contractor}]`;
+        select.appendChild(option);
+      });
+    }
+
+    function autofillNrp(name) {
+      const match = state.inspectors.find(ins => ins.name === name);
+      const nrpInput = document.getElementById('form_nrp');
+      if (match) {
+        nrpInput.value = match.nrp;
+      } else {
+        nrpInput.value = '';
+      }
+    }
+
+    function filterAssetDropdown(type) {
+      const select = document.getElementById('sheetObjectSelect');
+      select.innerHTML = '<option value="">-- Pilih Titik --</option>';
+      
+      const currentContractor = state.user ? state.user.contractor : 'Semua';
+
+      if (type === 'culvert') {
+        document.getElementById('ews_culvert_fields').classList.remove('hidden');
+        document.getElementById('ews_channel_fields').classList.add('hidden');
+
+        const filtered = state.culverts.filter(clv => currentContractor === 'Semua' || clv.contractor === currentContractor);
+        filtered.forEach(clv => {
+          const opt = document.createElement('option');
+          opt.value = clv.id;
+          opt.innerText = `${clv.id} - ${clv.location} [${clv.contractor}]`;
+          select.appendChild(opt);
+        });
+      } else {
+        document.getElementById('ews_culvert_fields').classList.add('hidden');
+        document.getElementById('ews_channel_fields').classList.remove('hidden');
+
+        const filteredChannels = state.channels.filter(chn => currentContractor === 'Semua' || chn.contractor === currentContractor);
+        filteredChannels.forEach(chn => {
+          const opt = document.createElement('option');
+          opt.value = chn.id;
+          opt.innerText = `${chn.id} [${chn.contractor}]`;
+          select.appendChild(opt);
+        });
+      }
+
+      renderComplianceFields(type);
+    }
+
+    function autofillObjectDetails(val) {
+      const latInput = document.getElementById('form_latitude');
+      const lngInput = document.getElementById('form_longitude');
+      
+      if (!val) {
+        latInput.value = '';
+        lngInput.value = '';
+        return;
+      }
+
+      const cleanId = val.split('_')[0];
+      const culvert = state.culverts.find(c => c.id === cleanId);
+      if (culvert) {
+        latInput.value = culvert.coordinates[0];
+        lngInput.value = culvert.coordinates[1];
+      } else {
+        latInput.value = '';
+        lngInput.value = '';
+      }
+    }
+
+    function getLocation() {
+      const latInput = document.getElementById('form_latitude');
+      const lngInput = document.getElementById('form_longitude');
+      
+      latInput.value = 'Mencari...';
+      lngInput.value = 'Mencari...';
+      
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            latInput.value = position.coords.latitude.toFixed(5);
+            lngInput.value = position.coords.longitude.toFixed(5);
+          },
+          () => {
+            const latMock = -1.23 + (Math.random() - 0.5) * 0.05;
+            const lngMock = 116.89 + (Math.random() - 0.5) * 0.05;
+            latInput.value = latMock.toFixed(5);
+            lngInput.value = lngMock.toFixed(5);
+            Swal.fire({ icon: 'info', title: 'GPS Simulasi', text: 'Menggunakan koordinat blok tambang simulasi.', timer: 1500 });
+          }
+        );
+      } else {
+        latInput.value = '-1.23450';
+        lngInput.value = '116.89201';
+      }
+    }
+
+    function calculateEWSScore(sediment, structureDamaged, boxControl) {
+      let score = 0;
+      score += parseFloat(sediment) * 4;
+      if (parseInt(structureDamaged) === 1) score += 3;
+      if (parseInt(boxControl) === 0) score += 1;
+      return score;
+    }
+
+    function calculateRisk(score) {
+      if (score >= 6) return 'Critical';
+      if (score >= 4) return 'High';
+      if (score >= 2) return 'Medium';
+      return 'Low';
+    }
+
+    // Submit Inspeksi
     async function handleFormSubmit(e) {
       e.preventDefault();
-      Swal.fire({ title: 'Memproses Media...', text: 'Mengonversi gambar & menyusun enkripsi...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
-      const objType = document.getElementById('form_object_type').value;
+      
       const selectedInspect = document.getElementById('form_inspector_select').value;
       const selectedAssetId = document.getElementById('sheetObjectSelect').value;
-      const inspectionDate = document.getElementById('form_date').value.replace('T', ' ');
-      const weatherValue = document.getElementById('form_weather').value;
-      const latitudeValue = document.getElementById('form_lat').value;
-      const longitudeValue = document.getElementById('form_lng').value;
+      const objType = document.getElementById('form_object_type').value;
 
-      // Parsing Dokumen Foto
-      const imgInlet = document.getElementById('file_inlet').files[0];
-      const imgOutlet = document.getElementById('file_outlet').files[0];
-      const imgOther = document.getElementById('file_other').files[0];
+      if (!selectedInspect || !selectedAssetId) {
+        Swal.fire({ icon: 'warning', title: 'Data belum lengkap', text: 'Pastikan Nama Inspektor dan ID Objek telah dipilih.' });
+        return;
+      }
 
-      const base64Inlet = await toBase64(imgInlet);
-      const base64Outlet = await toBase64(imgOutlet);
-      const base64Other = await toBase64(imgOther);
+      const latitudeValue = document.getElementById('form_latitude').value;
+      const longitudeValue = document.getElementById('form_longitude').value;
 
-      const inspectionId = 'OFF-' + Date.now();
+      const cleanId = selectedAssetId.split('_')[0];
+      const sourceCulvert = state.culverts.find(c => c.id === cleanId);
+      const currentRole = state.user ? state.user.contractor : 'BUMA';
+      let contractorStandard = currentRole;
+      if (contractorStandard === 'HAULING') contractorStandard = 'ADARO INDONESIA';
+      const mitraType = contractorStandard.toLowerCase();
 
-      // Penyusunan Payload yang Presisi dengan Kebutuhan Fungsi processFormLogic di Apps Script
+      const sedimentVal = objType === 'culvert' ? document.getElementById('ews_c_sediment').value : document.getElementById('ews_ch_sediment').value;
+      const structureVal = objType === 'culvert' ? document.getElementById('ews_c_structure').value : '0';
+      const boxVal = objType === 'culvert' ? document.getElementById('ews_c_box').value : '0';
+      
+      const numericEWS = calculateEWSScore(sedimentVal, structureVal, boxVal);
+      const riskCalculated = calculateRisk(numericEWS);
+
+      const complianceRadios = document.querySelectorAll('#compliance_fields input[type="radio"]:checked');
+      let totalComp = complianceRadios.length;
+      let countYa = 0;
+      complianceRadios.forEach(rad => { if (rad.value === 'Ya') countYa++; });
+      const computedComplianceScore = totalComp > 0 ? ((countYa / totalComp) * 100).toFixed(1) + "%" : "100%";
+
+      const inspectionId = `INS-${Date.now().toString().slice(-4)}`;
+      const inspectionDate = document.getElementById('form_date').value || new Date().toISOString();
+
       const payload = {
         action: 'processFormLogic',
         data: {
@@ -612,192 +937,639 @@ function autofillNrp(nama) {
           Participants: document.getElementById('form_participants').value,
           Location: currentRole,
           location: currentRole,
-          Mitra: currentRole,
-          mitraName: currentRole,
+          Mitra: contractorStandard,
+          mitraName: contractorStandard,
           mitraType: mitraType,
           ObjectInspeksi: objType,
           object: objType,
-          WeatherCondition: weatherValue,
-          weather: weatherValue,
+          WeatherCondition: document.getElementById('form_weather').value,
+          weather: document.getElementById('form_weather').value,
           Latitude: latitudeValue,
           latitude: latitudeValue,
           Longitude: longitudeValue,
           longitude: longitudeValue,
-          IDCulvert: objType === 'culvert' ? selectedAssetId : '',
-          IDChannel: objType === 'channel' ? selectedAssetId : '',
-          ScoreEWS: '',
+          IDCulvert: objType === 'culvert' ? cleanId : '',
+          IDChannel: objType === 'channel' ? cleanId : '',
+          ScoreEWS: numericEWS.toString(),
           Status: 'Pending',
-          ScoreCompliance: '',
-          TimeStamp: new Date().toISOString(),
-          
-          // EWS Variabel
-          culvertSediment: document.getElementById('ews_c_sediment').value,
-          culvertStucture: document.getElementById('ews_c_structure').value,
-          culvertBoxControl: document.getElementById('ews_c_box').value,
-          channelSediment: document.getElementById('ews_ch_sediment').value,
-
-        // File Foto Enkripsi Base64 (pastikan key sesuai backend)
-        photoInletBase64: base64Inlet,
-        photoOutletBase64: base64Outlet,
-        photoOtherBase64: base64Other,
-
-        // Variasi key agar backend tetap bisa menerima data foto dari kedua format
-        PhotoInletBase64: base64Inlet,
-        PhotoOutletBase64: base64Outlet,
-        PhotoOtherBase64: base64Other,
-        PhotoInlet: base64Inlet,
-        PhotoOutlet: base64Outlet,
-        PhotoOther: base64Other
+          ScoreCompliance: computedComplianceScore,
+          TimeStamp: new Date().toISOString()
         }
       };
 
-      // Injeksi parameter Compliance dinamis berbentuk Radio Button ke dalam objek payload data
-    if (mitraType === 'hauling') {
-      ['culvertPenyok','culvertKeropos','culvertKendaliErosi','culvertInfoLocation','culvertInfoJmlLine','culvertIfrasRambu'].forEach(key => {
-        const radioEl = document.querySelector(`input[name="comp_${key}"]:checked`);
-        payload.data[key] = radioEl ? radioEl.value : "0";
+      complianceRadios.forEach(rad => {
+        payload.data[rad.name] = rad.value;
       });
-    } else {
-      if (objType === 'culvert') {
-        ['culvertPenyok','culvertKeropos','culvertKendaliErosi','culvertInfoIDCulvert','culvertInfoJmlLine','culvertInfoDiameter','culvertTglMaintenance','culvertInfoPIC','culvertInfoLinkQRCode','culvertIfrasParkir','culvertIfrasVisible','culvertIfrasAccess','culvertIfrasRambu'].forEach(key => {
-          const radioEl = document.querySelector(`input[name="comp_${key}"]:checked`);
-          payload.data[key] = radioEl ? radioEl.value : "0";
-        });
-      } else {
-        const radioEl = document.querySelector('input[name="comp_channelKendaliErosi"]:checked');
-        payload.data.channelKendaliErosi = radioEl ? radioEl.value : "0";
-      }
-    }
 
-      // Cabang Logika Jaringan
-      if (!navigator.onLine) {
-        let saved = JSON.parse(localStorage.getItem(OFFLINE_KEY)) || []; 
-        saved.push(payload.data); // Simpan data murni tanpa pembungkus action
-        localStorage.setItem(OFFLINE_KEY, JSON.stringify(saved)); 
-        updateOfflineUI();
-        Swal.fire({ title: 'Tersimpan Offline', text: 'Data aman di memori lokal. Akan diupload saat sinyal kembali.', icon: 'warning' });
-        document.getElementById('inspectionForm').reset();
-        switchTab('home');
-      } else {
-        sendDataToCloudDirect(payload);
-      }
-    }
+      const newRecord = {
+        id: inspectionId,
+        idCulvert: cleanId,
+        contractor: currentRole,
+        date: inspectionDate,
+        weather: payload.data.weather,
+        participants: payload.data.Participants,
+        type: objType,
+        riskLevel: riskCalculated,
+        lastCheckCategory: 'Hari Ini',
+        priority: sourceCulvert ? sourceCulvert.priority : 'Prioritas 2',
+        lineCount: 1,
+        fileInlet: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=150&q=80',
+        fileOutlet: '',
+        fileOther: '',
+        sediment: sedimentVal,
+        structureDamaged: structureVal,
+        boxControl: boxVal
+      };
 
-    async function sendDataToCloudDirect(payload) {
-      Swal.fire({ title: 'Mengunggah...', text: 'Koneksi Cloud Terbuka, memproses Database & Dropbox...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-      try {
-        const res = await fetch(WEB_APP_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload),
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          redirect: "follow"
-        });
-        const resJson = await res.json();
-        if (resJson.status === 'success') {
-          Swal.fire('Sukses', `Data tersimpan di Cloud Sheets. Status EWS: ${resJson.data.ews}`, 'success');
-          document.getElementById('inspectionForm').reset();
-          switchTab('home');
-        } else { throw new Error(resJson.message); }
-      } catch (err) {
-        let saved = JSON.parse(localStorage.getItem(OFFLINE_KEY)) || []; 
-        saved.push(payload.data); 
-        localStorage.setItem(OFFLINE_KEY, JSON.stringify(saved)); 
-        updateOfflineUI();
-        Swal.fire('Koneksi Drop', 'Terjadi kendala jaringan saat upload. Data dialihkan aman ke memori offline.', 'warning');
-      }
-    }
+      const isOnline = navigator.onLine;
 
-    function updateOfflineUI() {
-      let saved = JSON.parse(localStorage.getItem(OFFLINE_KEY)) || [];
-      const banner = document.getElementById('syncBanner');
-      const countDisplay = document.getElementById('syncCount');
-      if (saved.length > 0) {
-        if(banner) banner.classList.remove('hidden'); 
-        if(countDisplay) countDisplay.textContent = saved.length; 
-      } else {
-        if(banner) banner.classList.add('hidden'); 
-      }
-    }
-
-    function checkPendingOfflineData() {
-      let saved = JSON.parse(localStorage.getItem(OFFLINE_KEY)) || [];
-      if (saved.length > 0) {
+      if (!isOnline) {
+        state.offlineInspections.push(payload);
+        state.inspections.unshift(newRecord);
+        saveStateToStorage();
         Swal.fire({
-          title: 'Sinyal Kembali Terdeteksi!',
-          text: `Ada ${saved.length} data offline yang belum sinkron. Kirim sekarang?`,
-          icon: 'info',
-          showCancelButton: true,
-          confirmButtonText: 'Sinkronkan',
-          confirmButtonColor: '#2D6A4F'
-        }).then((result) => { if (result.isConfirmed) { syncOfflineData(); } });
+          icon: 'warning',
+          title: 'Mode Offline Aktif',
+          text: 'Laporan disimpan di memori lokal. Silakan sinkronkan saat jaringan pulih.',
+          confirmButtonText: 'Oke'
+        });
+        switchTab('dashboard');
+      } else {
+        Swal.fire({
+          title: 'Mengirim Laporan',
+          text: 'Menghubungkan ke Google Sheets API...',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        try {
+          await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          state.inspections.unshift(newRecord);
+          saveStateToStorage();
+          Swal.close();
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil Terunggah',
+            text: 'Data laporan sukses tersimpan langsung di Google Sheets!',
+            timer: 2000,
+            showConfirmButton: false
+          });
+          switchTab('dashboard');
+        } catch (error) {
+          console.warn("Koneksi gagal saat kirim API, dialihkan ke antrian offline.", error);
+          state.offlineInspections.push(payload);
+          state.inspections.unshift(newRecord);
+          saveStateToStorage();
+          Swal.close();
+          Swal.fire('Offline Save', 'Koneksi API bermasalah. Laporan disimpan dalam antrian offline lokal.', 'info');
+          switchTab('dashboard');
+        }
+      }
+
+      document.getElementById('inspectionForm').reset();
+      prefillCurrentDateTime();
+      syncOfflineBanners();
+    }
+
+    // Sync indicators
+    function syncOfflineBanners() {
+      const bannerOffline = document.getElementById('offlineBanner');
+      const bannerSync = document.getElementById('syncBanner');
+      const syncCount = document.getElementById('syncCount');
+      const indicatorMobile = document.getElementById('offlineIndicatorMobile');
+
+      if (!navigator.onLine) {
+        bannerOffline.classList.remove('hidden');
+        indicatorMobile.classList.remove('hidden');
+      } else {
+        bannerOffline.classList.add('hidden');
+        indicatorMobile.classList.add('hidden');
+      }
+
+      if (state.offlineInspections.length > 0 && navigator.onLine) {
+        bannerSync.classList.remove('hidden');
+        syncCount.innerText = state.offlineInspections.length;
+      } else {
+        bannerSync.classList.add('hidden');
       }
     }
 
     async function syncOfflineData() {
-      if (!navigator.onLine) return;
-      let saved = JSON.parse(localStorage.getItem(OFFLINE_KEY)) || [];
-      if (saved.length === 0) return;
-      
-      Swal.fire({ title: 'Sinkronisasi Massal...', text: 'Mengunggah data batch...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-      try {
-        const res = await fetch(WEB_APP_URL, { 
-          method: 'POST', 
-          body: JSON.stringify({ action: 'processBatchOfflineData', data: saved }), 
-          headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-          redirect: "follow" 
-        });
-        const resJson = await res.json();
-        if(resJson.status === 'success') { 
-          localStorage.removeItem(OFFLINE_KEY); 
-          updateOfflineUI(); 
-          Swal.fire('Sukses', 'Semua data batch offline berhasil terunggah!', 'success'); 
+      Swal.fire({
+        title: 'Mulai Sinkronisasi',
+        text: `Menyinkronkan ${state.offlineInspections.length} data inspeksi offline...`,
+        icon: 'info',
+        showCancelButton: false,
+        confirmButtonText: 'Lanjutkan',
+        showLoaderOnConfirm: true,
+        preConfirm: async () => {
+          for (let payloadItem of state.offlineInspections) {
+            try {
+              await fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payloadItem)
+              });
+            } catch (e) {
+              console.error("Gagal menyinkronkan item.", e);
+            }
+          }
+          state.offlineInspections = [];
+          saveStateToStorage();
         }
-      } catch (err) { Swal.fire('Error', err.message, 'error'); }
+      }).then(() => {
+        Swal.fire('Selesai', 'Seluruh data offline berhasil dikirim ke Google Sheets API.', 'success');
+        syncOfflineBanners();
+        renderDashboard();
+      });
     }
 
-    function updateDashboardKPI() {
-      document.getElementById('kpiCulvert').innerText = dbMaster.culvert.length;
-      document.getElementById('kpiChannel').innerText = dbMaster.channel.length;
-      document.getElementById('kpiInpsektor').innerText = dbMaster.inspektor.length;
+    function syncMasterDataManual() {
+      Swal.fire({
+        title: 'Sinkronisasi Master',
+        text: 'Mengunduh database inspektor dan aset terbaru...',
+        icon: 'info',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      loadSheetsAPIData().then(() => {
+        Swal.close();
+        Swal.fire('Sukses', 'Data master berhasil diperbarui dari Google Sheets API.', 'success');
+        renderDatalists();
+        filterAssetDropdown(document.getElementById('form_object_type').value);
+      });
     }
 
-    function initializeLeafletMap() {
-      if (globalMap) return;
-      const defaultLat = dbMaster.culvert[0] ? dbMaster.culvert[0].lat : -2.176;
-      const defaultLng = dbMaster.culvert[0] ? dbMaster.culvert[0].lng : 115.478;
-
-      globalMap = L.map('mapWorkspace').setView([defaultLat, defaultLng], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(globalMap);
-
-      dbMaster.culvert.forEach(loc => {
-        if (currentRole === 'ADMIN' || loc.mitra === currentRole) {
-          L.circleMarker([loc.lat, loc.lng], { color: 'green', radius: 8, fillOpacity: 0.8 })
-            .addTo(globalMap)
-            .bindPopup(`<b>${loc.id}</b><br>Mitra: ${loc.mitra}<br>Tipe: ${loc.type}`);
+    function simulatePWAPrompt() {
+      Swal.fire({
+        title: 'Unduh Aplikasi',
+        text: 'Gunakan aplikasi pemantauan ini secara offline langsung dari ponsel Anda.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Install Sekarang'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire('Instalasi Dimulai', 'Aplikasi telah berhasil ditambahkan ke layar utama.', 'success');
         }
       });
     }
 
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-section').forEach(s => s.classList.add('hidden'));
-      document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active'));
-      document.getElementById(`section-${tabId}`).classList.remove('hidden');
-      
-      const activeBtn = document.getElementById(`desk-tab-${tabId}`);
-      if(activeBtn) activeBtn.classList.add('nav-active');
+    // Dashboard Engine with multi-filtering logic
+    function getFilteredInspections() {
+      const pFilter = document.getElementById('filter-prio').value;
+      const wFilter = document.getElementById('filter-waktu').value;
+      const rFilter = document.getElementById('filter-risiko').value;
+      const loggedInContractor = state.user ? state.user.contractor : 'Semua';
 
-      const mainContainer = document.getElementById('mainContainer');
-      if (tabId === 'map') {
-        mainContainer.classList.add('hidden');
-        document.body.classList.add('no-scroll');
-        setTimeout(initializeLeafletMap, 200);
+      return state.inspections.filter(ins => {
+        if (loggedInContractor !== 'Semua' && ins.contractor !== loggedInContractor) {
+          return false;
+        }
+        if (pFilter !== 'Semua' && ins.priority !== pFilter) return false;
+        if (wFilter !== 'Semua' && ins.lastCheckCategory !== wFilter) return false;
+        if (rFilter !== 'Semua' && ins.riskLevel !== rFilter) return false;
+        return true;
+      });
+    }
+
+    function renderDashboard() {
+      const records = getFilteredInspections();
+      
+      document.getElementById('cardTotal').innerText = state.culverts.filter(c => state.user.contractor === 'Semua' || c.contractor === state.user.contractor).length;
+      document.getElementById('cardCritical').innerText = records.filter(i => i.riskLevel === 'Critical').length;
+      document.getElementById('cardOverdue').innerText = records.filter(i => i.lastCheckCategory === '> 30 Hari').length;
+      document.getElementById('cardPrio1').innerText = records.filter(i => i.priority === 'Prioritas 1').length;
+
+      renderRiskChart(records);
+      renderTimeChart(records);
+      renderPrioChart(records);
+
+      const tbody = document.getElementById('dashboardTableBody');
+      const emptyDiv = document.getElementById('dashTableEmpty');
+      tbody.innerHTML = '';
+
+      if (records.length === 0) {
+        emptyDiv.classList.remove('hidden');
       } else {
-        mainContainer.classList.remove('hidden');
-        document.body.classList.remove('no-scroll');
+        emptyDiv.classList.add('hidden');
+        records.forEach(rec => {
+          let rClass = "bg-green-100 text-green-800";
+          if (rec.riskLevel === 'Medium') rClass = "bg-amber-100 text-amber-800";
+          if (rec.riskLevel === 'High') rClass = "bg-orange-100 text-orange-800";
+          if (rec.riskLevel === 'Critical') rClass = "bg-purple-100 text-purple-800";
+
+          const photoInletBtn = rec.fileInlet ? `<button onclick="viewMediaMockup('${rec.fileInlet}')" class="text-theme2 hover:text-theme4 transition"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
+          const photoOutletBtn = rec.fileOutlet ? `<button onclick="viewMediaMockup('${rec.fileOutlet}')" class="text-theme2 hover:text-theme4 transition"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
+          const photoOtherBtn = rec.fileOther ? `<button onclick="viewMediaMockup('${rec.fileOther}')" class="text-theme2 hover:text-theme4 transition"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
+
+          const row = `
+            <tr>
+              <td class="p-2.5 font-bold font-mono text-gray-700">${rec.idCulvert}</td>
+              <td class="p-2.5 text-gray-600">${rec.contractor}</td>
+              <td class="p-2.5 font-mono text-[11px] text-gray-500">${rec.date.split('T')[0]}</td>
+              <td class="p-2.5"><span class="px-2 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${rec.riskLevel}</span></td>
+              <td class="p-2.5 font-semibold text-gray-600">${rec.lastCheckCategory}</td>
+              <td class="p-2.5"><span class="font-bold text-rose-600">${rec.priority}</span></td>
+              <td class="p-2.5 text-center font-mono text-gray-600">${rec.lineCount}</td>
+              <td class="p-2.5 text-center">${photoInletBtn}</td>
+              <td class="p-2.5 text-center">${photoOutletBtn}</td>
+              <td class="p-2.5 text-center">${photoOtherBtn}</td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
       }
     }
 
-    function logout() { window.location.reload(); }
+    function viewMediaMockup(url) {
+      Swal.fire({
+        title: 'Pratinjau Foto Laporan',
+        imageUrl: url || 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=350&q=80',
+        imageAlt: 'Foto Lapangan',
+        confirmButtonColor: '#1B4332'
+      });
+    }
+
+    function filterDashboardTable() {
+      renderDashboard();
+    }
+
+    // Chart.js Generators
+    function renderRiskChart(data) {
+      const counts = { Low: 0, Medium: 0, High: 0, Critical: 0 };
+      data.forEach(d => { if (counts[d.riskLevel] !== undefined) counts[d.riskLevel]++; });
+
+      if (state.charts.risk) state.charts.risk.destroy();
+      const ctx = document.getElementById('riskChart').getContext('2d');
+      state.charts.risk = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Low', 'Medium', 'High', 'Critical'],
+          datasets: [{
+            label: 'Total',
+            data: [counts.Low, counts.Medium, counts.High, counts.Critical],
+            backgroundColor: ['#059669', '#f59e0b', '#ea580c', '#7e22ce'],
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
+    }
+
+    function renderTimeChart(data) {
+      const counts = { 'Hari Ini': 0, '< 7 Hari': 0, '> 7 Hari': 0, '> 30 Hari': 0 };
+      data.forEach(d => { if (counts[d.lastCheckCategory] !== undefined) counts[d.lastCheckCategory]++; });
+
+      if (state.charts.time) state.charts.time.destroy();
+      const ctx = document.getElementById('timeChart').getContext('2d');
+      state.charts.time = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Hari Ini', '< 7 Hari', '> 7 Hari', '> 30 Hari'],
+          datasets: [{
+            label: 'Total',
+            data: [counts['Hari Ini'], counts['< 7 Hari'], counts['> 7 Hari'], counts['> 30 Hari']],
+            backgroundColor: ['#3b82f6', '#22c55e', '#eab308', '#dc2626'],
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
+    }
+
+    function renderPrioChart(data) {
+      const counts = { 'Prioritas 1': 0, 'Prioritas 2': 0 };
+      data.forEach(d => { if (counts[d.priority] !== undefined) counts[d.priority]++; });
+
+      if (state.charts.prio) state.charts.prio.destroy();
+      const ctx = document.getElementById('prioChart').getContext('2d');
+      state.charts.prio = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Prio 1', 'Prio 2'],
+          datasets: [{
+            label: 'Total',
+            data: [counts['Prioritas 1'], counts['Prioritas 2']],
+            backgroundColor: ['#e11d48', '#0891b2'],
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
+    }
+
+    // CSV Download
+    function downloadDashboardExcel() {
+      const records = getFilteredInspections();
+      if (records.length === 0) {
+        Swal.fire('No Data', 'Tidak ada data untuk diekspor sesuai kombinasi filter saat ini.', 'warning');
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "ID Culvert,Mitra,Tanggal Inspeksi,Risk Level,Last Check,Prioritas,Jumlah Line,Sedimentasi,Cuaca\r\n";
+
+      records.forEach(rec => {
+        const row = `"${rec.idCulvert}","${rec.contractor}","${rec.date}","${rec.riskLevel}","${rec.lastCheckCategory}","${rec.priority}","${rec.lineCount}","${rec.sediment}","${rec.weather}"`;
+        csvContent += row + "\r\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Culvert_Inspection_Export_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      Swal.fire('Eksport Berhasil', 'File laporan (.csv kompatibel dengan Microsoft Excel) berhasil diunduh.', 'success');
+    }
+
+    // Leaflet Interactive Map Engine
+    function initMapOnce() {
+      if (map) return;
+
+      map = L.map('mapContainer').setView([-1.23, 116.89], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      window.addEventListener('resize', () => {
+        if (map) map.invalidateSize();
+      });
+    }
+
+    function setMitraMapFilter(contr) {
+      state.mapFilterContractor = contr;
+      
+      const btns = document.querySelectorAll('#mapContractorFilters button');
+      btns.forEach(btn => {
+        if (btn.id === `flt-map-${contr}`) {
+          btn.classList.remove('bg-white', 'text-theme1');
+          btn.classList.add('bg-theme2', 'text-white');
+        } else {
+          btn.classList.add('bg-white', 'text-theme1');
+          btn.classList.remove('bg-theme2', 'text-white');
+        }
+      });
+
+      renderMapMarkers();
+    }
+
+    function renderMapMarkers() {
+      if (!map) return;
+
+      mapMarkers.forEach(m => map.removeLayer(m));
+      mapMarkers = [];
+
+      const filteredCulverts = state.culverts.filter(clv => state.mapFilterContractor === 'Semua' || clv.contractor === state.mapFilterContractor);
+
+      filteredCulverts.forEach(clv => {
+        const lastIns = state.inspections.find(ins => ins.idCulvert === clv.id);
+        const risk = lastIns ? lastIns.riskLevel : 'No Data';
+        const priority = clv.priority;
+
+        let markerColor = '#9ca3af';
+        if (risk === 'Low') markerColor = '#10b981';
+        if (risk === 'Medium') markerColor = '#f59e0b';
+        if (risk === 'High') markerColor = '#ea580c';
+        if (risk === 'Critical') markerColor = '#a855f7';
+
+        const popupHtml = `
+          <div class="p-1 text-xs">
+            <div class="font-bold border-b pb-1 mb-1 text-theme1">${clv.id} - ${clv.location}</div>
+            <table class="w-full text-[10px]">
+              <tr><td class="font-bold text-gray-500 pr-2">Mitra:</td><td>${clv.contractor}</td></tr>
+              <tr><td class="font-bold text-gray-500 pr-2">Prioritas:</td><td><span class="text-rose-600 font-bold">${priority}</span></td></tr>
+              <tr><td class="font-bold text-gray-500 pr-2">Status Risiko:</td><td><span class="font-bold">${risk}</span></td></tr>
+              <tr><td class="font-bold text-gray-500 pr-2">Cek Terakhir:</td><td>${lastIns ? lastIns.lastCheckCategory : 'Belum diinspeksi'}</td></tr>
+            </table>
+            <div class="mt-2 text-right">
+              <button onclick="quickActionInspect('${clv.id}')" class="bg-theme1 text-white px-2 py-0.5 rounded font-bold text-[9px] hover:bg-theme2">Inspeksi Baru</button>
+            </div>
+          </div>
+        `;
+
+        const marker = L.circleMarker(clv.coordinates, {
+          radius: 9,
+          fillColor: markerColor,
+          color: '#ffffff',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.95
+        }).addTo(map).bindPopup(popupHtml);
+
+        mapMarkers.push(marker);
+      });
+    }
+
+    function quickActionInspect(id) {
+      document.getElementById('form_object_type').value = 'culvert';
+      filterAssetDropdown('culvert');
+      document.getElementById('sheetObjectSelect').value = id;
+      autofillObjectDetails(id);
+      switchTab('survey');
+    }
+
+    // Admin Master Panel CRUD Logic
+    function openMasterModal(category) {
+      document.getElementById('modalMgmt').classList.remove('hidden');
+      const select = document.getElementById('mgmt_type');
+      select.value = category;
+      toggleMgmtFields(category);
+
+      if (category === 'channel') {
+        const trg = document.getElementById('chn_culvert_id');
+        trg.innerHTML = '';
+        state.culverts.forEach(c => {
+          trg.innerHTML += `<option value="${c.id}">${c.id} (${c.location})</option>`;
+        });
+      }
+    }
+
+    function closeMgmtModal() {
+      document.getElementById('modalMgmt').classList.add('hidden');
+    }
+
+    function saveMgmt(e) {
+      e.preventDefault();
+      const type = document.getElementById('mgmt_type').value;
+
+      if (type === 'inspector') {
+        const name = document.getElementById('ins_nama').value.trim();
+        const nrp = document.getElementById('ins_nrp').value.trim();
+        const mitra = document.getElementById('ins_mitra').value;
+
+        if (!name || !nrp) {
+          Swal.fire('Salah', 'Nama & NRP wajib diisi!', 'warning');
+          return;
+        }
+
+        state.inspectors.push({ name, nrp, contractor: mitra });
+        Swal.fire('Sukses', `Inspector ${name} berhasil didaftarkan.`, 'success');
+      } 
+      else if (type === 'culvert') {
+        const id = document.getElementById('clv_id').value.trim().toUpperCase();
+        const lokasi = document.getElementById('clv_lokasi').value.trim();
+        const priority = document.getElementById('clv_priority').value;
+        const mitra = document.getElementById('clv_mitra').value;
+
+        if (!id || !lokasi) {
+          Swal.fire('Salah', 'ID & Lokasi wajib diisi!', 'warning');
+          return;
+        }
+
+        const latBase = -1.23 + (Math.random() - 0.5) * 0.04;
+        const lngBase = 116.89 + (Math.random() - 0.5) * 0.04;
+
+        state.culverts.push({
+          id,
+          location: lokasi,
+          contractor: mitra,
+          coordinates: [latBase, lngBase],
+          priority
+        });
+        Swal.fire('Sukses', `Culvert ID ${id} berhasil didaftarkan.`, 'success');
+      } 
+      else if (type === 'channel') {
+        const parentId = document.getElementById('chn_culvert_id').value;
+        const lineNo = document.getElementById('chn_line').value;
+
+        if (!lineNo) {
+          Swal.fire('Salah', 'Nomor line wajib diisi!', 'warning');
+          return;
+        }
+
+        state.channels.push({
+          parentCulvertId: parentId,
+          line: parseInt(lineNo)
+        });
+        Swal.fire('Sukses', `Sub-Line ${lineNo} untuk ${parentId} berhasil ditambahkan.`, 'success');
+      }
+
+      saveStateToStorage();
+      closeMgmtModal();
+      document.getElementById('mgmtForm').reset();
+      
+      renderDatalists();
+      filterAssetDropdown(document.getElementById('form_object_type').value);
+      renderAdminQuickView();
+      if (map) renderMapMarkers();
+    }
+
+    function renderAdminQuickView() {
+      const trg = document.getElementById('adminQuickView');
+      trg.innerHTML = '';
+      
+      trg.innerHTML += `<div class="font-bold text-theme1 border-b pb-0.5 mb-1 flex items-center gap-1"><i class="ph ph-users"></i> INSPECTORS (${state.inspectors.length})</div>`;
+      state.inspectors.forEach(ins => {
+        trg.innerHTML += `<div> - ${ins.name} (NRP: ${ins.nrp}) [${ins.contractor}]</div>`;
+      });
+
+      trg.innerHTML += `<div class="font-bold text-theme1 border-b pb-0.5 mt-3 mb-1 flex items-center gap-1"><i class="ph ph-bounding-box"></i> CULVERT POINTS (${state.culverts.length})</div>`;
+      state.culverts.forEach(c => {
+        trg.innerHTML += `<div> - ${c.id} | ${c.location} | <span class="text-rose-600">${c.priority}</span> | [${c.contractor}]</div>`;
+      });
+    }
+
+    // Single-Page Tab Switcher Router
+    function switchTab(tabId) {
+      state.activeTab = tabId;
+
+      document.querySelectorAll('.tab-section').forEach(section => {
+        section.classList.add('hidden');
+      });
+
+      const activeSec = document.getElementById(`section-${tabId}`);
+      if (activeSec) {
+        if (tabId === 'map') {
+          activeSec.classList.remove('hidden');
+          setTimeout(() => {
+            initMapOnce();
+            renderMapMarkers();
+            if (map) map.invalidateSize();
+          }, 100);
+        } else {
+          activeSec.classList.remove('hidden');
+        }
+      }
+
+      document.querySelectorAll('nav button').forEach(btn => {
+        if (btn.id === `desk-tab-${tabId}`) {
+          btn.classList.add('nav-active');
+        } else {
+          btn.classList.remove('nav-active');
+        }
+      });
+
+      document.querySelectorAll('#mobile-menu button').forEach(btn => {
+        if (btn.id === `mob-tab-${tabId}`) {
+          btn.classList.add('mobile-nav-active');
+        } else {
+          btn.classList.remove('mobile-nav-active');
+        }
+      });
+
+      if (tabId === 'dashboard') {
+        renderDashboard();
+      }
+
+      if (tabId === 'admin') {
+        renderAdminQuickView();
+      }
+    }
+
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    // App Initialization Hook
+    window.onload = function() {
+      prefillCurrentDateTime();
+      syncOfflineBanners();
+
+      window.addEventListener('online', syncOfflineBanners);
+      window.addEventListener('offline', syncOfflineBanners);
+
+      window.addEventListener('keydown', (e) => {
+        if (state.activeTab === 'map' && map) {
+          if (e.key === 'ArrowUp') map.panBy([0, -40]);
+          if (e.key === 'ArrowDown') map.panBy([0, 40]);
+          if (e.key === 'ArrowLeft') map.panBy([-40, 0]);
+          if (e.key === 'ArrowRight') map.panBy([40, 0]);
+        }
+      });
+    };
+
+    function toggleMgmtFields(type) {
+      document.querySelectorAll('.mgmt-field-group').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`field-group-${type}`).classList.remove('hidden');
+    }
   </script>
 </body>
 </html>
