@@ -928,7 +928,6 @@
       // Sinkronisasi data real-time pasca login sukses
       Swal.fire({
         title: 'Mempersiapkan Sistem',
-        text: 'Mengunduh database master dan riwayat transaksi langsung dari Google Sheets...',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
       });
@@ -946,7 +945,7 @@
       Swal.fire({
         icon: 'success',
         title: 'Selamat Datang',
-        text: `Masuk sebagai inspektor ${roleVal} sukses!`,
+        text: `Masuk sebagai ${roleVal} sukses!`,
         timer: 1500,
         showConfirmButton: false
       });
