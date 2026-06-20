@@ -8,13 +8,13 @@
   "theme_color": "#1B4332",
   "icons": [
     {
-      "src": "https://placehold.co/192x192/1B4332/ffffff?text=CULVERT",
+      "src": "https://placehold.co/192x192/1B4332/ffffff?text=CLV",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://placehold.co/512x512/1B4332/ffffff?text=CULVERT",
+      "src": "https://placehold.co/512x512/1B4332/ffffff?text=CLV",
       "sizes": "512x512",
       "type": "image/png"
     }
