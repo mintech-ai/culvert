@@ -34,14 +34,15 @@
 </head>
 <body class="bg-gray-50 text-theme1 font-sans antialiased relative">
 
-  <!-- LOGIN SECTION -->
+  <!-- SECTION LOGIN -->
   <div id="login-section" class="fixed inset-0 bg-theme1 z-[999] flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 border border-theme5">
       <div class="text-center mb-6">
         <i class="ph-fill ph-shield-check text-5xl text-theme4 mb-2"></i>
         <h2 class="text-2xl font-bold text-theme1">Culvert Inspection</h2>
-        <p class="text-gray-500 text-sm">Sistem Inspeksi Culvert Terintegrasi</p>
+        <p class="text-gray-500 text-sm">Integrated Culvert Inspection System</p>
       </div>
+      <!-- Form login untuk mengautentikasi pengguna -->
       <form id="loginForm" onsubmit="handleLogin(event)">
         <div class="mb-4">
           <label class="block text-sm font-semibold mb-1">Username <span class="text-red-500">*</span></label>
@@ -62,7 +63,7 @@
     </div>
   </div>
 
-  <!-- HEADER -->
+  <!-- HEADER / NAVIGASI -->
   <header class="bg-theme1 text-white shadow-lg sticky top-0 z-40 h-[64px] flex flex-col justify-center">
     <div class="w-full max-w-6xl mx-auto px-4 flex justify-between items-center">
       <div class="flex items-center space-x-2 cursor-pointer" onclick="switchTab('home')">
@@ -80,7 +81,7 @@
         <div id="userInfoDisplay" class="hidden text-xs text-theme4 font-mono mr-2 bg-black bg-opacity-30 px-2 py-1 rounded border border-theme2"></div>
         <div id="offlineIndicatorMobile" class="hidden h-3 w-3 rounded-full bg-red-500 animate-pulse" title="Offline Mode Aktif"></div>
         
-        <!-- Desktop Logout Button -->
+        <!-- Tombol Logout Desktop -->
         <button onclick="logout()" class="hidden md:flex items-center gap-1 text-xs text-red-300 hover:text-red-400 font-semibold transition border border-red-950 hover:border-red-900 bg-red-950 bg-opacity-35 px-2.5 py-1 rounded focus:outline-none">
           <i class="ph ph-sign-out"></i> Logout
         </button>
@@ -90,14 +91,14 @@
     </div>
   </header>
 
-  <!-- BANNERS -->
+  <!-- BANNER NOTIFIKASI OFFLINE/SINKRONISASI -->
   <div id="offlineBanner" class="hidden bg-red-500 text-white text-xs font-bold px-4 py-2 flex justify-between items-center z-30 relative shadow-md"><span><i class="ph ph-wifi-slash mr-1"></i> Mode Offline Aktif. Gunakan data master yang tersimpan.</span></div>
   <div id="syncBanner" class="hidden bg-orange-100 text-orange-800 border-b border-orange-200 text-sm font-semibold px-4 py-3 flex justify-between items-center z-30 relative shadow-md">
     <span><i class="ph ph-cloud-arrow-up mr-2 text-lg"></i> <span id="syncCount">0</span> Data Tersimpan Offline</span>
     <button onclick="syncOfflineData()" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded shadow text-xs transition">Sinkronisasi</button>
   </div>
 
-  <!-- MOBILE MENU -->
+  <!-- MENU MOBILE -->
   <div id="mobile-menu" class="hidden fixed top-[64px] left-0 w-full bg-theme1 border-t border-theme2 z-50 shadow-xl max-h-[calc(100vh-64px)] overflow-y-auto">
     <button onclick="switchTab('home'); toggleMobileMenu()" id="mob-tab-home" class="block w-full text-left px-4 py-3 font-semibold text-white hover:bg-theme2 transition">Home</button>
     <button onclick="switchTab('survey'); toggleMobileMenu()" id="mob-tab-survey" class="block w-full text-left px-4 py-3 font-semibold text-white hover:bg-theme2 transition">Form Inspeksi</button>
@@ -111,7 +112,7 @@
     <button onclick="logout()" class="block w-full text-left px-4 py-3 font-semibold text-red-300 hover:bg-theme2 transition">Logout</button>
   </div>
 
-  <!-- MAIN CONTAINER -->
+  <!-- CONTAINER UTAMA -->
   <main id="mainContainer" class="max-w-6xl mx-auto px-4 mt-6 pb-10">
     
     <!-- 1. HOME SECTION -->
@@ -119,7 +120,7 @@
       <div class="text-center py-12 md:py-20 bg-white rounded-lg border border-gray-100 shadow-sm px-6">
         <div class="inline-block p-4 bg-theme4 bg-opacity-30 rounded-full mb-4"><i class="ph-fill ph-bounding-box text-6xl text-theme2"></i></div>
         <h2 class="text-3xl md:text-4xl font-bold text-theme1 mb-4">Selamat Datang di Culvert Monitoring</h2>
-        <p class="text-gray-500 mb-10 max-w-xl mx-auto text-sm md:text-base">Gunakan platform ini untuk inspeksi rutin gorong-gorong (culvert) & saluran air (channel) di seluruh area kontraktor pertambangan secara tersinkronisasi.</p>
+        <p class="text-gray-500 mb-10 max-w-xl mx-auto text-sm md:text-base">Platform untuk inspeksi rutin Culvert dan Channelan di area pertambangan PT Adaro Indonesia.</p>
         <button onclick="switchTab('survey')" class="bg-theme2 hover:bg-theme1 text-white font-bold py-3 px-6 rounded shadow transition"><i class="ph ph-plus-circle mr-2"></i> Mulai Inspeksi Baru</button>
       </div>
     </section>
@@ -240,7 +241,7 @@
           <div class="bg-gray-50 p-4 rounded border border-gray-200 text-xs">
             <h3 class="text-[11px] font-bold text-theme2 uppercase mb-2 border-b pb-1.5 flex items-center gap-1"><i class="ph ph-check-square"></i> Matriks Kepatuhan (Compliance Check)</h3>
             <div id="compliance_fields" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-gray-700">
-              <!-- Rendered Dynamically -->
+              <!-- Dirender secara Dinamis -->
             </div>
           </div>
 
@@ -337,7 +338,7 @@
               </tr>
             </thead>
             <tbody id="dashboardTableBody" class="text-xs divide-y divide-gray-100 font-medium">
-              <!-- Rendered via JS -->
+              <!-- Dirender via JS -->
             </tbody>
           </table>
           <div id="dashTableEmpty" class="hidden p-6 text-center text-gray-400 text-xs">Tidak ada data yang sesuai dengan kombinasi filter.</div>
@@ -345,7 +346,7 @@
       </div>
     </section>
 
-    <!-- 4. ADMIN HOOK SECTION -->
+    <!-- 4. ADMIN PANEL SECTION -->
     <section id="section-admin" class="tab-section hidden">
       <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-lg mx-auto shadow-sm text-xs">
         <div class="text-center mb-6">
@@ -393,16 +394,37 @@
     <section id="section-map" class="tab-section hidden absolute top-[64px] left-0 w-full z-0 h-[calc(100vh-64px)] bg-gray-200">
       <div id="mapContainer" class="w-full h-full z-0"></div>
       
-      <!-- Interactive Map Selector Filters -->
-      <div id="filter-container-map" class="absolute top-4 left-14 z-[400] bg-white p-3 rounded-lg shadow-2xl border border-gray-200 text-xs font-semibold flex flex-col gap-2 max-w-[280px]">
-        <div class="text-gray-500 font-bold border-b pb-1 mb-1"><i class="ph ph-funnel mr-1"></i> Filter Map View (Pilih Salah Satu):</div>
+      <!-- Interactive Map Selector Filters & Search Bar (Premium Horizontal Layout) -->
+      <div id="filter-container-map" class="absolute top-4 left-14 z-[400] bg-white p-3 rounded-xl shadow-2xl border border-gray-200 text-xs font-semibold flex flex-col md:flex-row md:items-center gap-3.5 max-w-[calc(100vw-80px)] md:max-w-none">
         
-        <div class="flex flex-col gap-1.5">
-          <select id="mapMainSelector" onchange="handleMapIndicatorChange(this.value)" class="bg-gray-50 border border-gray-300 rounded px-2 py-1 font-bold text-gray-700 focus:outline-none text-[11px]">
+        <!-- Bagian 1: Filter Visual Peta -->
+        <div class="flex flex-col gap-1 w-full md:w-auto">
+          <div class="text-gray-500 font-bold flex items-center gap-1.5">
+            <i class="ph ph-funnel text-theme3 text-sm"></i> 
+            <span>Filter Tampilan Peta:</span>
+          </div>
+          <select id="mapMainSelector" onchange="handleMapIndicatorChange(this.value)" class="bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-1.5 font-bold text-theme1 focus:outline-none focus:border-theme3 text-[11px] w-full md:w-[190px]">
             <option value="risk">Berdasarkan Tingkat Risiko</option>
             <option value="time">Berdasarkan Waktu Terakhir Cek</option>
             <option value="priority">Berdasarkan Prioritas</option>
           </select>
+        </div>
+
+        <!-- Garis Pembatas Vertikal (Hanya tampil pada layar sedang ke atas) -->
+        <div class="hidden md:block w-[1px] h-9 bg-gray-200 self-end mb-0.5"></div>
+
+        <!-- Bagian 2: Pencarian Pintar ID Aset -->
+        <div class="relative w-full md:w-auto flex-1">
+          <div class="text-gray-500 font-bold mb-1 flex items-center gap-1.5">
+            <i class="ph ph-magnifying-glass text-theme3 text-sm"></i> 
+            <span>Cari Culvert/Channel:</span>
+          </div>
+          <div class="relative">
+            <input type="text" id="mapSearchInput" oninput="handleMapSearch(this.value)" placeholder="Ketik ID (Contoh: CV-PIT-01)..." class="bg-gray-50 border border-gray-300 rounded-lg pl-8 pr-2.5 py-1.5 font-bold text-theme1 focus:outline-none focus:border-theme3 text-[11px] w-full md:w-[220px]" autocomplete="off">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-gray-400"><i class="ph ph-magnifying-glass"></i></span>
+          </div>
+          <!-- Dropdown Rekomendasi / Autosuggest -->
+          <div id="mapSearchSuggestions" class="hidden absolute left-0 right-0 bg-white border border-gray-200 mt-1 max-h-40 overflow-y-auto rounded-lg shadow-xl z-[500] text-xs font-medium divide-y divide-gray-100"></div>
         </div>
       </div>
 
@@ -425,7 +447,7 @@
       </div>
       
       <form id="mgmtForm" class="p-4 flex flex-col gap-3.5" onsubmit="saveMgmt(event)">
-        <!-- Hidden input to store active master category type -->
+        <!-- Input tersembunyi untuk menyimpan tipe master yang aktif -->
         <input type="hidden" id="mgmt_type">
 
         <div id="mgmt_inputs" class="space-y-3">
@@ -473,11 +495,12 @@
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block text-gray-600 font-semibold mb-0.5">Jumlah Line (Kapasitas):</label>
-                <input type="number" id="clv_jml_line" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none" value="1" min="1">
+                <input type="number" id="clv_jml_line" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none" value="" placeholder="Jumlah line">
               </div>
               <div>
                 <label class="block text-gray-600 font-semibold mb-0.5">Prioritas:</label>
                 <select id="clv_priority" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none bg-white">
+                  <option value="">-- Tanpa Prioritas --</option>
                   <option value="Prioritas 1">Prioritas 1</option>
                   <option value="Prioritas 2">Prioritas 2</option>
                 </select>
@@ -505,7 +528,7 @@
             <div>
               <label class="block text-gray-600 font-semibold mb-1">Pilih ID Culvert Terdaftar <span class="text-red-500">*</span>:</label>
               <select id="update_line_culvert_id" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none bg-white" onchange="loadCurrentLineVal(this.value)">
-                <!-- Loaded Dynamically -->
+                <!-- Dimuat secara Dinamis -->
               </select>
             </div>
             <div>
@@ -540,28 +563,75 @@
     </div>
   </div>
 
-  <!-- MAIN SCRIPT (Logic & Google Apps Script Integrated Engine) -->
+  <!-- SCRIPT UTAMA (Logika Bisnis & Integrasi Aplikasi) -->
   <script>
-    // Google Apps Script Web App API Endpoint
+    // Endpoint API Google Apps Script Web App
     const API_URL = "https://script.google.com/macros/s/AKfycbzAb12Zk7OgRd2SC8WseZSVDy84mkAmpioFHrWKhMCQNTQKOsXJ-mexRag-0jvC-Z8G/exec";
 
-    // Global App State (Initially empty, loaded strictly on API calls)
+    // State Aplikasi Global (Menyimpan data master & hasil input offline)
     let state = {
-      inspectors: JSON.parse(localStorage.getItem('clv_inspectors')) || [],
-      culverts: JSON.parse(localStorage.getItem('clv_culverts')) || [],
-      channels: JSON.parse(localStorage.getItem('clv_channels')) || [],
-      inspections: JSON.parse(localStorage.getItem('clv_inspections')) || [],
+      inspectors: JSON.parse(localStorage.getItem('clv_inspectors')) || [
+        { name: "Andi Saputra", nrp: "8821092", contractor: "BUMA" },
+        { name: "Rian Hidayat", nrp: "7402312", contractor: "SIS" },
+        { name: "Ahmad Wijaya", nrp: "9212003", contractor: "PPA" },
+        { name: "Budi Setiawan", nrp: "1023945", contractor: "ADARO INDONESIA" }
+      ],
+      culverts: JSON.parse(localStorage.getItem('clv_culverts')) || [
+        { id: "CV-PIT-01", location: "KM 12 Pit Barat", contractor: "BUMA", coordinates: [-1.2291, 116.8912], priority: "Prioritas 1", jml_line: 2, type: "culvert" },
+        { id: "CV-PIT-02", location: "KM 15 Main Road", contractor: "SIS", coordinates: [-1.2354, 116.8854], priority: "Prioritas 2", jml_line: 1, type: "culvert" },
+        { id: "CV-PIT-03", location: "KM 18 Outpit", contractor: "PPA", coordinates: [-1.2410, 116.8992], priority: "Prioritas 1", jml_line: 3, type: "culvert" },
+        { id: "CV-PIT-04", location: "KM 22 Hauling", contractor: "ADARO INDONESIA", coordinates: [-1.2185, 116.9051], priority: "", jml_line: "", type: "culvert" } // Contoh prioritas dan line kosong
+      ],
+      channels: JSON.parse(localStorage.getItem('clv_channels')) || [
+        { id: "CH-PIT-01", contractor: "BUMA" },
+        { id: "CH-PIT-02", contractor: "SIS" },
+        { id: "CH-PIT-03", contractor: "PPA" }
+      ],
+      inspections: JSON.parse(localStorage.getItem('clv_inspections')) || [
+        {
+          id: "CLV-20260620100000",
+          idCulvert: "CV-PIT-01",
+          contractor: "BUMA",
+          date: "2026-06-20 10:00:00",
+          weather: "Cerah",
+          participants: "Doni, Eko",
+          type: "culvert",
+          riskLevel: "Low",
+          lastCheckCategory: "Hari Ini",
+          priority: "Prioritas 1",
+          lineCount: 2,
+          fileInlet: "https://placehold.co/600x400/2D6A4F/ffffff?text=Inlet+CV-PIT-01",
+          fileOutlet: "https://placehold.co/600x400/2D6A4F/ffffff?text=Outlet+CV-PIT-01",
+          fileOther: ""
+        },
+        {
+          id: "CLV-20260515093000",
+          idCulvert: "CV-PIT-04",
+          contractor: "ADARO INDONESIA",
+          date: "2026-05-15 09:30:00",
+          weather: "Pasca Hujan",
+          participants: "",
+          type: "culvert",
+          riskLevel: "Critical",
+          lastCheckCategory: "> 30 Hari",
+          priority: "",
+          lineCount: "",
+          fileInlet: "https://placehold.co/600x400/a855f7/ffffff?text=Inlet+CV-PIT-04",
+          fileOutlet: "https://placehold.co/600x400/a855f7/ffffff?text=Outlet+CV-PIT-04",
+          fileOther: ""
+        }
+      ],
       offlineInspections: JSON.parse(localStorage.getItem('clv_offline_inspections')) || [],
       user: null,
       activeTab: 'home',
-      mapFilterIndicator: 'risk', // Default Map Legend Indicator (risk, time, priority)
+      mapFilterIndicator: 'risk', 
       charts: {}
     };
 
     let map = null;
     let mapMarkers = [];
 
-    // Save state helpers
+    // Fungsi Pembantu Penyimpanan Lokal
     function saveStateToStorage() {
       localStorage.setItem('clv_inspectors', JSON.stringify(state.inspectors));
       localStorage.setItem('clv_culverts', JSON.stringify(state.culverts));
@@ -570,7 +640,7 @@
       localStorage.setItem('clv_offline_inspections', JSON.stringify(state.offlineInspections));
     }
 
-    // Convert file input to raw base64 string
+    // Mengubah unggahan file menjadi Base64 string
     async function getBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -583,7 +653,7 @@
       });
     }
 
-    // Helper to calculate last check category depending on server ISO timestamps
+    // Mengkategorikan waktu pengecekan terakhir
     function calculateLastCheckCategory(datetimeStr) {
       if (!datetimeStr || datetimeStr === '-') return 'No Data';
       try {
@@ -601,19 +671,22 @@
       }
     }
 
-    // Retrieve priority of any specific ID from live culverts
+    // Mendapatkan prioritas culvert berdasarkan ID (kosong diwakili '-')
     function getCulvertPriority(id) {
       const match = state.culverts.find(c => c.id === id);
-      return match ? match.priority : 'Prioritas 2';
+      return (match && match.priority) ? match.priority : '-';
     }
 
-    // Retrieve line count of any specific ID from live culverts
+    // Mendapatkan jumlah line culvert berdasarkan ID (kosong diwakili '-')
     function getCulvertLineCount(id) {
       const match = state.culverts.find(c => c.id === id);
-      return match ? (match.jml_line || 1) : 1;
+      if (!match || match.jml_line === undefined || match.jml_line === null || match.jml_line === '') {
+        return '-';
+      }
+      return match.jml_line;
     }
 
-    // Fetch master database sheets from Apps Script API (DO GET action=getMasterData)
+    // Membuka database master langsung dari Google Sheets
     async function loadSheetsAPIData() {
       try {
         const response = await fetch(`${API_URL}?action=getMasterData`, {
@@ -624,7 +697,7 @@
         if (response.ok) {
           const result = await response.json();
           if (result) {
-            // 1. Map inspectors: nama (Col A), nrp (Col B), perusahaan (Col C)
+            // Pemetaan data Inspektor
             if (result.inspektor) {
               state.inspectors = result.inspektor.map(row => {
                 let comp = (row.perusahaan || row.Perusahaan || '').trim().toUpperCase();
@@ -636,7 +709,7 @@
               });
             }
 
-            // 2. Map culverts: id (Col A), lat (Col B), lng (Col C), jml_line (Col D), prioritas (Col E), mitra (Col F), type (Col G)
+            // Pemetaan data Culvert
             if (result.culvert) {
               state.culverts = result.culvert.map(row => {
                 let comp = (row.mitra || '').trim().toUpperCase();
@@ -645,14 +718,14 @@
                   location: `KM ${row.id.split('-')[2] || 'Area'}`,
                   contractor: comp,
                   coordinates: [parseFloat(row.lat) || -1.23, parseFloat(row.lng) || 116.89],
-                  priority: row.prioritas || 'Prioritas 2',
-                  jml_line: parseInt(row.jml_line) || 1,
+                  priority: row.prioritas || '',
+                  jml_line: (row.jml_line !== undefined && row.jml_line !== null && row.jml_line !== '') ? parseInt(row.jml_line) : '',
                   type: row.type || 'culvert'
                 };
               });
             }
 
-            // 3. Map channels: id (Col A), lokasi (Col B)
+            // Pemetaan data Channel
             if (result.channel) {
               state.channels = result.channel.map(row => {
                 let comp = (row.lokasi || '').trim().toUpperCase();
@@ -664,15 +737,15 @@
             }
 
             saveStateToStorage();
-            console.log("Database Google Sheets sukses tersinkronisasi.");
+            console.log("Database Google Sheets sukses disinkronisasikan.");
           }
         }
       } catch (error) {
-        console.error("Gagal menghubungi web app Google Apps Script.", error);
+        console.error("Gagal terhubung dengan Google Apps Script. Menggunakan data cadangan lokal.", error);
       }
     }
 
-    // Fetch live dashboard & map points directly from Google Sheets Form Data (DO GET action=getLatestInspectionData)
+    // Memuat visual transaksi laporan terakhir
     async function loadLiveInspections() {
       try {
         const response = await fetch(`${API_URL}?action=getLatestInspectionData`, {
@@ -694,41 +767,43 @@
               riskLevel: row.status_ews || 'Low',
               lastCheckCategory: calculateLastCheckCategory(row.datetime),
               priority: getCulvertPriority(row.id_object),
-              lineCount: parseInt(row.jml_line) || 1,
+              lineCount: (row.jml_line !== undefined && row.jml_line !== null && row.jml_line !== '') ? parseInt(row.jml_line) : '',
               fileInlet: row.photo_inlet !== 'No Photo' ? row.photo_inlet : '',
               fileOutlet: row.photo_outlet !== 'No Photo' ? row.photo_outlet : '',
               fileOther: row.photo_other !== 'No Photo' ? row.photo_other : ''
             }));
             saveStateToStorage();
-            console.log("Transaksi laporan inspeksi live berhasil dimuat.");
+            console.log("Data transaksi live berhasil diperbarui.");
           }
         }
       } catch (error) {
-        console.error("Gagal memuat visual transaksi live.", error);
+        console.error("Gagal memuat visual transaksi terbaru.", error);
       }
     }
 
-    // Prefill DateTime Input
+    // Mengisi otomatis tanggal dan waktu saat ini
     function prefillCurrentDateTime() {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      document.getElementById('form_date').value = `${year}-${month}-${day}T${hours}-${minutes}`;
+      const textDate = document.getElementById('form_date');
+      if (textDate) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        textDate.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
     }
 
-    // Dynamic Compliance Fields Matrix
+    // Merender dinamis Matriks Kepatuhan (Compliance Check)
     function renderComplianceFields(type) {
       const wrapper = document.getElementById('compliance_fields');
       wrapper.innerHTML = "";
 
       let fields = [];
-      const currentRole = state.user ? state.user.contractor.toLowerCase() : 'buma';
       const mitraType = state.user ? state.user.mitraType : 'mining';
 
-      // 1. Skema Hauling Adaro (6 Indikator - Hanya untuk Culvert)
+      // Skema Hauling Adaro (6 Indikator)
       if (mitraType === 'hauling') {
         fields = [
           { key: "culvertPenyok", text: "Penyok di culvert" },
@@ -739,7 +814,7 @@
           { key: "culvertIfrasRambu", text: "Rambu penanda lokasi" }
         ];
       } 
-      // 2. Skema Mining Utama (BUMA, SIS, PPA, atau Admin)
+      // Skema Pertambangan Utama (BUMA, SIS, PPA, atau Admin)
       else {
         if (type === 'culvert') {
           fields = [
@@ -781,7 +856,7 @@
       });
     }
 
-    // Auth Engine (Uses precisely specified user/pass configurations)
+    // Engine Proses Autentikasi Pengguna
     async function handleLogin(e) {
       e.preventDefault();
       const userVal = document.getElementById('login_username').value.trim();
@@ -831,7 +906,7 @@
       userDisplay.innerText = `${userVal.toUpperCase()} [${mitraType.toUpperCase()}]`;
       userDisplay.classList.remove('hidden');
 
-      // Object Type filtering based on role
+      // Memfilter jenis objek
       const optChannel = document.getElementById('opt_object_channel');
       const objectTypeSelect = document.getElementById('form_object_type');
       if (mitraType === 'hauling') {
@@ -841,20 +916,19 @@
         optChannel.style.display = 'block';
       }
 
-      // Navigation visibility
+      // Visibilitas Panel Admin
       if (mitraType === 'admin') {
         document.getElementById('desk-tab-admin').classList.remove('hidden');
         document.getElementById('mob-tab-admin').classList.remove('hidden');
       } else {
         document.getElementById('desk-tab-admin').classList.add('hidden');
         document.getElementById('mob-tab-admin').classList.add('hidden');
-        state.mapFilterContractor = contractor;
       }
 
-      // Force-Sync Google Sheets API Data on login (Direct Connection)
+      // Sinkronisasi data real-time pasca login sukses
       Swal.fire({
-        title: 'Sinkronisasi Sistem',
-        text: 'Menghubungkan & mengunduh database terbaru langsung dari Google Sheets...',
+        title: 'Mempersiapkan Sistem',
+        text: 'Mengunduh database master dan riwayat transaksi langsung dari Google Sheets...',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
       });
@@ -871,8 +945,8 @@
 
       Swal.fire({
         icon: 'success',
-        title: 'Login Berhasil',
-        text: `Selamat datang di CULVERT MONITORING, ${roleVal}`,
+        title: 'Selamat Datang',
+        text: `Masuk sebagai inspektor ${roleVal} sukses!`,
         timer: 1500,
         showConfirmButton: false
       });
@@ -880,6 +954,7 @@
       switchTab('home');
     }
 
+    // Keluar dari sistem
     function logout() {
       state.user = null;
       document.getElementById('login-section').classList.remove('hidden');
@@ -891,7 +966,7 @@
       }
     }
 
-    // Dynamic Dropdowns Population without company tags (Clean output)
+    // Menampilkan dropdown Inspektor berdasarkan kontrak masuk
     function renderDatalists() {
       const select = document.getElementById('form_inspector_select');
       select.innerHTML = '<option value="">-- Pilih Inspektor --</option>';
@@ -902,12 +977,12 @@
       filtered.forEach(ins => {
         const option = document.createElement('option');
         option.value = ins.name;
-        // Clean display - just Name
         option.innerText = ins.name;
         select.appendChild(option);
       });
     }
 
+    // Autolengkap data NRP
     function autofillNrp(name) {
       const match = state.inspectors.find(ins => ins.name === name);
       const nrpInput = document.getElementById('form_nrp');
@@ -918,6 +993,7 @@
       }
     }
 
+    // Memfilter daftar aset berdasarkan tipe objek terpilih
     function filterAssetDropdown(type) {
       const select = document.getElementById('sheetObjectSelect');
       select.innerHTML = '<option value="">-- Pilih Titik --</option>';
@@ -932,7 +1008,6 @@
         filtered.forEach(clv => {
           const opt = document.createElement('option');
           opt.value = clv.id;
-          // Clean display - just ID
           opt.innerText = clv.id;
           select.appendChild(opt);
         });
@@ -944,7 +1019,6 @@
         filteredChannels.forEach(chn => {
           const opt = document.createElement('option');
           opt.value = chn.id;
-          // Clean display - just ID
           opt.innerText = chn.id;
           select.appendChild(opt);
         });
@@ -953,6 +1027,7 @@
       renderComplianceFields(type);
     }
 
+    // Autolengkap koodinat latitude & longitude
     function autofillObjectDetails(val) {
       const latInput = document.getElementById('form_latitude');
       const lngInput = document.getElementById('form_longitude');
@@ -974,6 +1049,7 @@
       }
     }
 
+    // Mendapatkan koordinat dari GPS perangkat
     function getLocation() {
       const latInput = document.getElementById('form_latitude');
       const lngInput = document.getElementById('form_longitude');
@@ -988,6 +1064,7 @@
             lngInput.value = position.coords.longitude.toFixed(5);
           },
           () => {
+            // Simulasi koordinat tambang jika GPS mati/ditolak di iFrame browser
             const latMock = -1.23 + (Math.random() - 0.5) * 0.05;
             const lngMock = 116.89 + (Math.random() - 0.5) * 0.05;
             latInput.value = latMock.toFixed(5);
@@ -1001,7 +1078,7 @@
       }
     }
 
-    // Submit Inspeksi
+    // Pengiriman Laporan Inspeksi Baru
     async function handleFormSubmit(e) {
       e.preventDefault();
       
@@ -1030,7 +1107,6 @@
       const fileOutletEl = document.getElementById('file_outlet').files[0];
       const fileOtherEl = document.getElementById('file_other').files[0];
 
-      // Convert chosen images to base64 for Dropbox integration in GAS
       let base64Inlet = "";
       let base64Outlet = "";
       let base64Other = "";
@@ -1044,7 +1120,7 @@
       const inspectionId = 'CLV-' + new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
       const inspectionDate = document.getElementById('form_date').value || new Date().toISOString();
 
-      // Hitung visual lokal EWS skor sebelum reload database
+      // Kalkulasi Early Warning System (EWS) secara lokal
       const numericEWSLocal = (parseFloat(sedimentVal) * 4) + (parseInt(structureVal) * 3) + (parseInt(boxVal) === 0 ? 1 : 0);
       let localStatusEws = 'Low';
       const normScore = numericEWSLocal / 3;
@@ -1091,7 +1167,6 @@
         }
       };
 
-      // Map compliance checkboxes (Ada -> 1, Tidak -> 0)
       complianceRadios.forEach(rad => {
         payload.data[rad.name] = rad.value === 'Ada' ? '1' : '0';
       });
@@ -1101,7 +1176,6 @@
       if (!isOnline) {
         state.offlineInspections.push(payload);
         
-        // Simpan visual records lokal sementara
         state.inspections.unshift({
           id: inspectionId,
           idCulvert: cleanId,
@@ -1112,7 +1186,7 @@
           type: objType,
           riskLevel: localStatusEws,
           lastCheckCategory: 'Hari Ini',
-          priority: sourceCulvert ? sourceCulvert.priority : 'Prioritas 2',
+          priority: sourceCulvert ? sourceCulvert.priority : '',
           lineCount: getCulvertLineCount(cleanId),
           fileInlet: '',
           fileOutlet: '',
@@ -1123,14 +1197,14 @@
         Swal.fire({
           icon: 'warning',
           title: 'Mode Offline Aktif',
-          text: 'Laporan disimpan di memori lokal. Silakan sinkronkan saat jaringan pulih.',
-          confirmButtonText: 'Oke'
+          text: 'Koneksi internet terputus. Laporan disimpan dalam memori lokal sementara.',
+          confirmButtonText: 'OK'
         });
         switchTab('dashboard');
       } else {
         Swal.fire({
           title: 'Mengirim Laporan',
-          text: 'Menyinkronkan data dan foto ke Google Sheets & Dropbox...',
+          text: 'Mengunggah laporan ke Google Sheets & Dropbox...',
           allowOutsideClick: false,
           didOpen: () => { Swal.showLoading(); }
         });
@@ -1141,24 +1215,23 @@
             body: JSON.stringify(payload)
           });
 
-          // Reload inspection records directly dari GAS Database sheet form_data
           await loadLiveInspections();
           Swal.close();
 
           Swal.fire({
             icon: 'success',
-            title: 'Berhasil Terunggah',
-            text: 'Data laporan sukses tersimpan di Google Sheets & foto diupload ke Dropbox!',
+            title: 'Pengiriman Sukses',
+            text: 'Data sukses tersimpan di Google Sheets dan dokumentasi foto terunggah ke Dropbox!',
             timer: 2000,
             showConfirmButton: false
           });
           switchTab('dashboard');
         } catch (error) {
-          console.warn("Koneksi gagal saat kirim API, dialihkan ke antrian offline.", error);
+          console.warn("Jaringan bermasalah. Menyimpan ke daftar tunggu offline.", error);
           state.offlineInspections.push(payload);
           saveStateToStorage();
           Swal.close();
-          Swal.fire('Offline Save', 'Koneksi API bermasalah. Laporan disimpan dalam antrian offline lokal.', 'info');
+          Swal.fire('Data Disimpan Lokal', 'Terjadi gangguan jaringan, data berhasil diamankan di ponsel Anda.', 'info');
           switchTab('dashboard');
         }
       }
@@ -1168,7 +1241,7 @@
       syncOfflineBanners();
     }
 
-    // Sync indicators
+    // Mengelola indikator banner status online/offline
     function syncOfflineBanners() {
       const bannerOffline = document.getElementById('offlineBanner');
       const bannerSync = document.getElementById('syncBanner');
@@ -1176,28 +1249,29 @@
       const indicatorMobile = document.getElementById('offlineIndicatorMobile');
 
       if (!navigator.onLine) {
-        bannerOffline.classList.remove('hidden');
-        indicatorMobile.classList.remove('hidden');
+        if (bannerOffline) bannerOffline.classList.remove('hidden');
+        if (indicatorMobile) indicatorMobile.classList.remove('hidden');
       } else {
-        bannerOffline.classList.add('hidden');
-        indicatorMobile.classList.add('hidden');
+        if (bannerOffline) bannerOffline.classList.add('hidden');
+        if (indicatorMobile) indicatorMobile.classList.add('hidden');
       }
 
       if (state.offlineInspections.length > 0 && navigator.onLine) {
-        bannerSync.classList.remove('hidden');
-        syncCount.innerText = state.offlineInspections.length;
+        if (bannerSync) bannerSync.classList.remove('hidden');
+        if (syncCount) syncCount.innerText = state.offlineInspections.length;
       } else {
-        bannerSync.classList.add('hidden');
+        if (bannerSync) bannerSync.classList.add('hidden');
       }
     }
 
+    // Melakukan sinkronisasi data tertunda
     async function syncOfflineData() {
       Swal.fire({
         title: 'Mulai Sinkronisasi',
-        text: `Menyinkronkan ${state.offlineInspections.length} data offline...`,
+        text: `Mengirim ${state.offlineInspections.length} antrean data offline...`,
         icon: 'info',
         showCancelButton: false,
-        confirmButtonText: 'Lanjutkan',
+        confirmButtonText: 'Mulai Sekarang',
         showLoaderOnConfirm: true,
         preConfirm: async () => {
           for (let payloadItem of state.offlineInspections) {
@@ -1207,7 +1281,7 @@
                 body: JSON.stringify(payloadItem)
               });
             } catch (e) {
-              console.error("Gagal menyinkronkan item.", e);
+              console.error("Gagal menyinkronkan data item offline.", e);
             }
           }
           state.offlineInspections = [];
@@ -1215,16 +1289,17 @@
           await loadLiveInspections();
         }
       }).then(() => {
-        Swal.fire('Selesai', 'Seluruh data offline berhasil dikirim ke Google Sheets API & Dropbox.', 'success');
+        Swal.fire('Sinkronisasi Selesai', 'Seluruh antrean data offline sukses diposting!', 'success');
         syncOfflineBanners();
         renderDashboard();
       });
     }
 
+    // Sinkronisasi database master secara manual
     function syncMasterDataManual() {
       Swal.fire({
-        title: 'Sinkronisasi Master',
-        text: 'Mengunduh database inspektor dan aset terbaru...',
+        title: 'Singkronisasi Manual',
+        text: 'Mengunduh pembaharuan data master inspektor & koordinat culvert...',
         icon: 'info',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
@@ -1232,27 +1307,28 @@
 
       Promise.all([loadSheetsAPIData(), loadLiveInspections()]).then(() => {
         Swal.close();
-        Swal.fire('Sukses', 'Data master & transaksi berhasil disinkronisasi.', 'success');
+        Swal.fire('Berhasil', 'Seluruh data berhasil disinkronisasikan.', 'success');
         renderDatalists();
         filterAssetDropdown(document.getElementById('form_object_type').value);
       });
     }
 
+    // Simulasi prompt PWA offline
     function simulatePWAPrompt() {
       Swal.fire({
         title: 'Unduh Aplikasi',
-        text: 'Gunakan aplikasi pemantauan ini secara offline langsung dari ponsel Anda.',
+        text: 'Instal aplikasi pemantauan ini di HP atau Komputer Anda agar dapat dibuka tanpa sinyal.',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Install Sekarang'
+        confirmButtonText: 'Install'
       }).then((result) => {
         if (result.isConfirmed) {
-          Swal.fire('Instalasi Dimulai', 'Aplikasi telah berhasil ditambahkan ke layar utama.', 'success');
+          Swal.fire('Instalasi Dimulai', 'Aplikasi telah ditambahkan ke layar perangkat Anda.', 'success');
         }
       });
     }
 
-    // Dashboard Engine with multi-filtering logic
+    // Logika Pemfilteran Data Laporan
     function getFilteredInspections() {
       const pFilter = document.getElementById('filter-prio').value;
       const wFilter = document.getElementById('filter-waktu').value;
@@ -1263,13 +1339,17 @@
         if (loggedInContractor !== 'Semua' && ins.contractor !== loggedInContractor) {
           return false;
         }
-        if (pFilter !== 'Semua' && ins.priority !== pFilter) return false;
+        if (pFilter !== 'Semua') {
+          if (pFilter === 'Prioritas 1' && ins.priority !== 'Prioritas 1') return false;
+          if (pFilter === 'Prioritas 2' && ins.priority !== 'Prioritas 2') return false;
+        }
         if (wFilter !== 'Semua' && ins.lastCheckCategory !== wFilter) return false;
         if (rFilter !== 'Semua' && ins.riskLevel !== rFilter) return false;
         return true;
       });
     }
 
+    // Mereset seluruh filter dasbor
     function resetDashboardFilters() {
       document.getElementById('filter-prio').value = 'Semua';
       document.getElementById('filter-waktu').value = 'Semua';
@@ -1277,6 +1357,7 @@
       renderDashboard();
     }
 
+    // Merender Panel Dasbor Informasi Utama
     function renderDashboard() {
       const records = getFilteredInspections();
       
@@ -1307,6 +1388,9 @@
           const photoOutletBtn = rec.fileOutlet ? `<a href="${rec.fileOutlet}" target="_blank" class="text-theme2 hover:text-theme4 transition inline-block p-1"><i class="ph ph-image text-lg"></i></a>` : `<span class="text-gray-300">-</span>`;
           const photoOtherBtn = rec.fileOther ? `<a href="${rec.fileOther}" target="_blank" class="text-theme2 hover:text-theme4 transition inline-block p-1"><i class="ph ph-image text-lg"></i></a>` : `<span class="text-gray-300">-</span>`;
 
+          const priorityDisplay = rec.priority ? rec.priority : '-';
+          const lineCountDisplay = getCulvertLineCount(rec.idCulvert);
+
           const row = `
             <tr>
               <td class="p-2.5 font-bold font-mono text-gray-700">${rec.idCulvert}</td>
@@ -1314,8 +1398,8 @@
               <td class="p-2.5 font-mono text-[11px] text-gray-500">${rec.date ? rec.date.split(' ')[0] : '-'}</td>
               <td class="p-2.5"><span class="px-2 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${rec.riskLevel}</span></td>
               <td class="p-2.5 font-semibold text-gray-600">${rec.lastCheckCategory}</td>
-              <td class="p-2.5"><span class="font-bold text-rose-600">${rec.priority}</span></td>
-              <td class="p-2.5 text-center font-mono text-gray-600">${getCulvertLineCount(rec.idCulvert)}</td>
+              <td class="p-2.5"><span class="font-bold text-rose-600">${priorityDisplay}</span></td>
+              <td class="p-2.5 text-center font-mono text-gray-600">${lineCountDisplay}</td>
               <td class="p-2.5 text-center">${photoInletBtn}</td>
               <td class="p-2.5 text-center">${photoOutletBtn}</td>
               <td class="p-2.5 text-center">${photoOtherBtn}</td>
@@ -1326,7 +1410,7 @@
       }
     }
 
-    // Pratinjau Foto SweetAlert2
+    // Modal Tinjauan Foto dari Leaflet Map
     function viewMediaMockup(url) {
       Swal.fire({
         title: 'Pratinjau Foto Laporan',
@@ -1336,7 +1420,7 @@
       });
     }
 
-    // Helper functions untuk merender link/button popup media secara aman di map
+    // Output Link Dokumen di iFrame Map
     function photoInletBtnPopup(lastIns) {
       if (lastIns && lastIns.fileInlet) {
         return `<button onclick="viewMediaMockup('${lastIns.fileInlet}')" class="text-blue-600 font-bold hover:underline">Buka Foto Inlet</button>`;
@@ -1344,6 +1428,7 @@
       return '<span class="text-gray-400">Tidak ada</span>';
     }
 
+    // Output Link Dokumen di iFrame Map
     function photoOutletBtnPopup(lastIns) {
       if (lastIns && lastIns.fileOutlet) {
         return `<button onclick="viewMediaMockup('${lastIns.fileOutlet}')" class="text-blue-600 font-bold hover:underline">Buka Foto Outlet</button>`;
@@ -1351,6 +1436,7 @@
       return '<span class="text-gray-400">Tidak ada</span>';
     }
 
+    // Output Link Dokumen di iFrame Map
     function photoOtherBtnPopup(lastIns) {
       if (lastIns && lastIns.fileOther) {
         return `<button onclick="viewMediaMockup('${lastIns.fileOther}')" class="text-blue-600 font-bold hover:underline">Buka Foto Tambahan</button>`;
@@ -1362,7 +1448,7 @@
       renderDashboard();
     }
 
-    // Chart.js Generators
+    // Generator Grafik Berdasarkan Risiko (Bar Chart)
     function renderRiskChart(data) {
       const counts = { Low: 0, Medium: 0, High: 0, Critical: 0 };
       data.forEach(d => { if (counts[d.riskLevel] !== undefined) counts[d.riskLevel]++; });
@@ -1389,6 +1475,7 @@
       });
     }
 
+    // Generator Grafik Waktu Inspeksi (Bar Chart)
     function renderTimeChart(data) {
       const counts = { 'Hari Ini': 0, '< 7 Hari': 0, '> 7 Hari': 0, '> 30 Hari': 0 };
       data.forEach(d => { if (counts[d.lastCheckCategory] !== undefined) counts[d.lastCheckCategory]++; });
@@ -1415,6 +1502,7 @@
       });
     }
 
+    // Generator Grafik Prioritas (Bar Chart)
     function renderPrioChart(data) {
       const counts = { 'Prioritas 1': 0, 'Prioritas 2': 0 };
       data.forEach(d => { if (counts[d.priority] !== undefined) counts[d.priority]++; });
@@ -1441,7 +1529,7 @@
       });
     }
 
-    // CSV Download
+    // Mengunduh Laporan ke Excel CSV
     function downloadDashboardExcel() {
       const records = getFilteredInspections();
       if (records.length === 0) {
@@ -1453,7 +1541,7 @@
       csvContent += "ID Culvert,Mitra,Tanggal Inspeksi,Risk Level,Last Check,Prioritas,Jumlah Line,Sedimentasi,Cuaca\r\n";
 
       records.forEach(rec => {
-        const row = `"${rec.idCulvert}","${rec.contractor}","${rec.date}","${rec.riskLevel}","${rec.lastCheckCategory}","${rec.priority}","${getCulvertLineCount(rec.idCulvert)}","${rec.sediment}","${rec.weather}"`;
+        const row = `"${rec.idCulvert}","${rec.contractor}","${rec.date}","${rec.riskLevel}","${rec.lastCheckCategory}","${rec.priority || ''}","${getCulvertLineCount(rec.idCulvert)}","${rec.sediment || ''}","${rec.weather}"`;
         csvContent += row + "\r\n";
       });
 
@@ -1468,27 +1556,38 @@
       Swal.fire('Eksport Berhasil', 'File laporan (.csv kompatibel dengan Microsoft Excel) berhasil diunduh.', 'success');
     }
 
-    // Leaflet Interactive Map Engine
+    // Inisialisasi Peta Leaflet dengan Citra Satelit ArcGIS
     function initMapOnce() {
       if (map) return;
 
       map = L.map('mapContainer').setView([-1.23, 116.89], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        maxZoom: 18
       }).addTo(map);
 
       window.addEventListener('resize', () => {
         if (map) map.invalidateSize();
       });
+
+      // Event listener global untuk menutup autosuggest ketika mengklik di luar area search
+      window.addEventListener('click', (e) => {
+        const suggestions = document.getElementById('mapSearchSuggestions');
+        const searchInput = document.getElementById('mapSearchInput');
+        if (suggestions && searchInput && e.target !== searchInput && !suggestions.contains(e.target)) {
+          suggestions.classList.add('hidden');
+        }
+      });
     }
 
-    // Toggle Map Legend & Replot Markers Bergantian (Mutual Exclusion)
+    // Mengatur jenis legenda & penanda marker peta secara dinamis
     function handleMapIndicatorChange(indicator) {
       state.mapFilterIndicator = indicator;
       drawMapLegends(indicator);
       renderMapMarkers();
     }
 
+    // Menampilkan marker aset ke peta Leaflet & melakukan auto-zoom lokasi titik
     function renderMapMarkers() {
       if (!map) return;
 
@@ -1498,7 +1597,6 @@
       const loggedInContractor = state.user ? state.user.contractor : 'Semua';
       const activeIndicator = state.mapFilterIndicator;
 
-      // Filter culvert master points by company login (ADARO INDONESIA / SIS / PPA / BUMA / Semua)
       const filteredCulverts = state.culverts.filter(clv => {
         if (loggedInContractor !== 'Semua' && clv.contractor !== loggedInContractor) {
           return false;
@@ -1506,14 +1604,16 @@
         return true;
       });
 
-      // Plot all matching points
+      // Layer Group penanda marker koordinat
+      const markerBoundsLayer = L.featureGroup();
+
       filteredCulverts.forEach(clv => {
         const lastIns = state.inspections.find(ins => ins.idCulvert === clv.id);
         const risk = lastIns ? lastIns.riskLevel : 'No Data';
         const timeCategory = lastIns ? lastIns.lastCheckCategory : 'No Data';
-        const priority = clv.priority;
+        const priority = clv.priority ? clv.priority : '-';
+        const lineCount = getCulvertLineCount(clv.id);
 
-        // Dynamic marker coloring depending on active indicator selected
         let markerColor = '#9ca3af';
 
         if (activeIndicator === 'risk') {
@@ -1540,8 +1640,8 @@
               <tr><td class="font-bold text-gray-500 pr-2">Tgl Cek Terakhir:</td><td>${lastIns ? lastIns.date.split(' ')[0] : 'Belum diinspeksi'}</td></tr>
               <tr><td class="font-bold text-gray-500 pr-2">Tingkat Risiko:</td><td><span class="font-bold text-emerald-700">${risk}</span></td></tr>
               <tr><td class="font-bold text-gray-500 pr-2">Prioritas:</td><td><span class="text-rose-600 font-bold">${priority}</span></td></tr>
-              <tr><td class="font-bold text-gray-500 pr-2">Jumlah Line:</td><td class="font-mono">${getCulvertLineCount(clv.id)}</td></tr>
-              <tr class="border-t border-gray-100"><td class="font-bold text-gray-500 pt-1" colspan="2">Link Media Dropbox:</td></tr>
+              <tr><td class="font-bold text-gray-500 pr-2">Jumlah Line:</td><td class="font-mono">${lineCount}</td></tr>
+              <tr class="border-t border-gray-100"><td class="font-bold text-gray-500 pt-1" colspan="2">Dokumentasi:</td></tr>
               <tr><td class="pl-2 text-gray-500" colspan="2">Inlet: ${photoInletBtnPopup(lastIns)}</td></tr>
               <tr><td class="text-gray-500 pl-2" colspan="2">Outlet: ${photoOutletBtnPopup(lastIns)}</td></tr>
               <tr><td class="text-gray-500 pl-2" colspan="2">Tambahan: ${photoOtherBtnPopup(lastIns)}</td></tr>
@@ -1559,28 +1659,105 @@
           weight: 2,
           opacity: 1,
           fillOpacity: 0.95
-        }).addTo(map).bindPopup(popupHtml);
+        }).bindPopup(popupHtml);
 
+        // Sematkan ID Culvert ke dalam properti objek marker untuk keperluan penelusuran search
+        marker.clvId = clv.id;
+
+        markerBoundsLayer.addLayer(marker);
+        map.addLayer(marker);
         mapMarkers.push(marker);
       });
+
+      // Melakukan zoom & pemfokusan otomatis ke wilayah sebaran culvert
+      if (filteredCulverts.length > 0) {
+        try {
+          map.fitBounds(markerBoundsLayer.getBounds(), { padding: [50, 50] });
+        } catch (e) {
+          console.warn("Gagal menyesuaikan batas peta secara dinamis.", e);
+        }
+      }
     }
 
-    // Direct Javascript bindings inside templates
+    // Logika Pemrosesan Pencarian ID Pintar pada Peta Citra Satelit
+    function handleMapSearch(query) {
+      const suggestions = document.getElementById('mapSearchSuggestions');
+      if (!query.trim()) {
+        suggestions.classList.add('hidden');
+        suggestions.innerHTML = '';
+        return;
+      }
+
+      const loggedInContractor = state.user ? state.user.contractor : 'Semua';
+      const cleanQuery = query.toLowerCase().trim();
+
+      // Cari ID yang cocok di database master (culvert/channel) sesuai batasan hak login pengguna
+      const filtered = state.culverts.filter(clv => {
+        if (loggedInContractor !== 'Semua' && clv.contractor !== loggedInContractor) {
+          return false;
+        }
+        return clv.id.toLowerCase().includes(cleanQuery);
+      });
+
+      if (filtered.length === 0) {
+        suggestions.innerHTML = '<div class="p-2.5 text-gray-400 italic text-center">ID tidak ditemukan</div>';
+        suggestions.classList.remove('hidden');
+        return;
+      }
+
+      suggestions.innerHTML = '';
+      filtered.forEach(clv => {
+        const item = document.createElement('div');
+        item.className = 'p-2.5 hover:bg-theme5 hover:bg-opacity-30 cursor-pointer flex justify-between items-center transition';
+        item.innerHTML = `
+          <div class="flex flex-col">
+            <span class="font-bold text-theme1">${clv.id}</span>
+            <span class="text-[9px] text-gray-500 font-medium">${clv.location || 'Area Tambang'}</span>
+          </div>
+          <span class="text-[9px] bg-theme1 text-white font-mono px-1.5 py-0.5 rounded uppercase">${clv.contractor}</span>
+        `;
+        item.onclick = () => selectMapSearchResult(clv.id);
+        suggestions.appendChild(item);
+      });
+
+      suggestions.classList.remove('hidden');
+    }
+
+    // Eksekusi Panning, Zoom-in, dan Pembukaan Popup Penanda ketika ID Hasil Cari Diklik
+    function selectMapSearchResult(id) {
+      document.getElementById('mapSearchInput').value = id;
+      document.getElementById('mapSearchSuggestions').classList.add('hidden');
+
+      // Cari marker yang sesuai di array mapMarkers
+      const matchMarker = mapMarkers.find(m => m.clvId === id);
+      if (matchMarker) {
+        map.setView(matchMarker.getLatLng(), 17); // Fokus dekat (zoom level 17)
+        setTimeout(() => {
+          matchMarker.openPopup();
+        }, 300);
+      } else {
+        // Fallback jika titik belum dirender, cari dari state culvert koordinat langsung
+        const clvObj = state.culverts.find(c => c.id === id);
+        if (clvObj) {
+          map.setView(clvObj.coordinates, 17);
+        }
+      }
+    }
+
+    // Akses global agar tombol iFrame modal berfungsi lancar
     window.quickActionInspect = quickActionInspect;
     window.viewMediaMockup = viewMediaMockup;
 
-    // Admin Master Panel CRUD Logic
+    // Logika Manajemen Panel Admin (Master CRUD)
     function openMasterModal(category) {
       document.getElementById('modalMgmt').classList.remove('hidden');
       document.getElementById('mgmt_type').value = category;
       
-      // Update Panel title
       const title = document.getElementById('modalPanelTitle');
       if (category === 'inspector') title.innerText = 'Tambah Inspector';
       if (category === 'culvert') title.innerText = 'Tambah ID Culvert Baru';
       if (category === 'updateLine') {
         title.innerText = 'Update Jumlah Line Culvert';
-        // Populate current culvert dropdown for quick update
         const trg = document.getElementById('update_line_culvert_id');
         trg.innerHTML = '<option value="">-- Pilih ID Culvert --</option>';
         state.culverts.forEach(c => {
@@ -1594,23 +1771,25 @@
       toggleMgmtFields(category);
     }
 
+    // Mengambil nilai line dari culvert yang dipilih
     function loadCurrentLineVal(id) {
       const match = state.culverts.find(c => c.id === id);
-      document.getElementById('update_line_value').value = match ? (match.jml_line || 1) : '';
+      document.getElementById('update_line_value').value = match ? (match.jml_line || '') : '';
     }
 
+    // Menutup modal admin
     function closeMgmtModal() {
       document.getElementById('modalMgmt').classList.add('hidden');
     }
 
-    // Submit Master Operations to backend logic
+    // Menyimpan form kustom panel admin
     async function saveMgmt(e) {
       e.preventDefault();
       const type = document.getElementById('mgmt_type').value;
 
       Swal.fire({
         title: 'Menyimpan...',
-        text: 'Menghubungkan ke Google Sheets API...',
+        text: 'Menghubungkan ke penyimpanan...',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
       });
@@ -1622,7 +1801,7 @@
           const mitra = document.getElementById('ins_mitra').value;
 
           if (!name || !nrp) {
-            Swal.fire('Salah', 'Nama & NRP wajib diisi!', 'warning');
+            Swal.fire('Eror', 'Nama & NRP wajib diisi!', 'warning');
             return;
           }
 
@@ -1633,13 +1812,14 @@
           const lokasi = document.getElementById('clv_lokasi').value.trim();
           const lat = parseFloat(document.getElementById('clv_lat').value);
           const lng = parseFloat(document.getElementById('clv_lng').value);
-          const jmlLine = parseInt(document.getElementById('clv_jml_line').value) || 1;
+          const jmlLineVal = document.getElementById('clv_jml_line').value;
+          const jmlLine = jmlLineVal !== '' ? parseInt(jmlLineVal) : '';
           const priority = document.getElementById('clv_priority').value;
           const mitra = document.getElementById('clv_mitra').value;
           const objType = document.getElementById('clv_type').value;
 
           if (!id || !lokasi || isNaN(lat) || isNaN(lng)) {
-            Swal.fire('Salah', 'Seluruh parameter bertanda bintang wajib diisi dengan benar!', 'warning');
+            Swal.fire('Eror', 'Semua kolom bertanda bintang wajib diisi dengan benar!', 'warning');
             return;
           }
 
@@ -1655,23 +1835,24 @@
         } 
         else if (type === 'updateLine') {
           const id = document.getElementById('update_line_culvert_id').value;
-          const newlineVal = parseInt(document.getElementById('update_line_value').value);
+          const newlineVal = document.getElementById('update_line_value').value;
 
-          if (!id || isNaN(newlineVal)) {
-            Swal.fire('Salah', 'ID Culvert & nilai line baru wajib diisi!', 'warning');
+          if (!id) {
+            Swal.fire('Eror', 'ID Culvert wajib diisi!', 'warning');
             return;
           }
 
-          // Update state values locally
           const match = state.culverts.find(c => c.id === id);
-          if (match) match.jml_line = newlineVal;
+          if (match) {
+            match.jml_line = newlineVal !== '' ? parseInt(newlineVal) : '';
+          }
         }
         else if (type === 'channel') {
           const chnId = document.getElementById('chn_id').value.trim().toUpperCase();
           const chnPerusahaan = document.getElementById('chn_perusahaan').value;
 
           if (!chnId) {
-            Swal.fire('Salah', 'ID Channel wajib diisi!', 'warning');
+            Swal.fire('Eror', 'ID Channel wajib diisi!', 'warning');
             return;
           }
 
@@ -1686,7 +1867,7 @@
         document.getElementById('mgmtForm').reset();
         Swal.close();
 
-        Swal.fire('Sukses', 'Data master berhasil disimpan ke penyimpanan lokal. Silakan sync manual untuk penulisan ke Google Sheets.', 'success');
+        Swal.fire('Sukses', 'Data master berhasil diperbarui secara lokal. Gunakan sync manual jika Anda ingin menulis langsung ke Google Sheets.', 'success');
         
         renderDatalists();
         filterAssetDropdown(document.getElementById('form_object_type').value);
@@ -1694,11 +1875,11 @@
         if (map) renderMapMarkers();
 
       } catch (error) {
-        Swal.fire('Koneksi Gagal', 'Data dialihkan ke penyimpanan lokal temporer.', 'info');
+        Swal.fire('Gagal Menyimpan', 'Terjadi kesalahan sistem.', 'error');
       }
     }
 
-    // Cleaned Quick View (just show ID & Contractor/Mitra)
+    // Peninjauan cepat database master
     function renderAdminQuickView() {
       const trg = document.getElementById('adminQuickView');
       trg.innerHTML = '';
@@ -1719,7 +1900,7 @@
       });
     }
 
-    // Download CSV functions for Administrator master tables
+    // Mengunduh Master ke berkas CSV
     function downloadMasterCSV(category) {
       let csvContent = "data:text/csv;charset=utf-8,";
       let filename = `Master_${category}_Export.csv`;
@@ -1734,7 +1915,7 @@
         csvContent += "ID_CULVERT,LATITUDE,LONGITUDE,JML_LINE,PRIORITAS,MITRA,TYPE\r\n";
         state.culverts.forEach(row => {
           let comp = row.contractor === 'HAULING' ? 'ADARO INDONESIA' : row.contractor;
-          csvContent += `"${row.id}","${row.coordinates[0]}","${row.coordinates[1]}","${row.jml_line || 1}","${row.priority}","${comp}","${row.type}"\r\n`;
+          csvContent += `"${row.id}","${row.coordinates[0]}","${row.coordinates[1]}","${row.jml_line || ''}","${row.priority || ''}","${comp}","${row.type}"\r\n`;
         });
       } else if (category === 'channel') {
         csvContent += "ID Channel,LOKASI\r\n";
@@ -1752,16 +1933,10 @@
       link.click();
       document.body.removeChild(link);
 
-      Swal.fire('CSV Terunduh', `Data master ${category} berhasil diekspor.`, 'success');
+      Swal.fire('CSV Terunduh', `Ekspor data master ${category} sukses dilakukan.`, 'success');
     }
 
-    // Standard map selector change handler
-    function handleMapIndicatorChange(val) {
-      state.mapFilterIndicator = val;
-      drawMapLegends(val);
-      renderMapMarkers();
-    }
-
+    // Merender Legenda Peta
     function drawMapLegends(indicator) {
       const container = document.getElementById('mapLegendContent');
       container.innerHTML = "";
@@ -1788,12 +1963,13 @@
         container.innerHTML = `
           <div class="text-theme1 border-b border-gray-200 pb-1 mb-1.5 flex items-center gap-1"><i class="ph ph-star"></i> Prioritas</div>
           <div class="flex items-center mb-1"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-rose-600"></span> Prioritas 1</div>
-          <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-cyan-600"></span> Prioritas 2</div>
+          <div class="flex items-center mb-1"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-cyan-600"></span> Prioritas 2</div>
+          <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full mr-2 bg-gray-400"></span> Tanpa Prioritas</div>
         `;
       }
     }
 
-    // Single-Page Tab Switcher Router
+    // Router Tab Navigasi Halaman
     function switchTab(tabId) {
       state.activeTab = tabId;
 
@@ -1807,7 +1983,6 @@
           activeSec.classList.remove('hidden');
           setTimeout(() => {
             initMapOnce();
-            // Default Map filter indicator selection loaded
             handleMapIndicatorChange(document.getElementById('mapMainSelector').value);
             if (map) map.invalidateSize();
           }, 100);
@@ -1816,7 +1991,7 @@
         }
       }
 
-      document.querySelectorAll('nav button').forEach(btn => {
+      document.querySelectorAll('nav text, nav button').forEach(btn => {
         if (btn.id === `desk-tab-${tabId}`) {
           btn.classList.add('nav-active');
         } else {
@@ -1846,7 +2021,7 @@
       menu.classList.toggle('hidden');
     }
 
-    // App Initialization Hook
+    // Hook Inisialisasi Halaman
     window.onload = function() {
       prefillCurrentDateTime();
       syncOfflineBanners();
@@ -1869,7 +2044,7 @@
       document.getElementById(`field-group-${type}`).classList.remove('hidden');
     }
 
-    // Fungsi untuk handle klik inspeksi dari peta
+    // Melakukan inspeksi instan langsung dari Map popup click
     function quickActionInspect(id) {
       const isCulvert = state.culverts.find(c => c.id === id);
       const type = isCulvert ? 'culvert' : 'channel';
