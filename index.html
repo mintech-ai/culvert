@@ -92,7 +92,16 @@
   </header>
 
   <!-- BANNER NOTIFIKASI OFFLINE/SINKRONISASI -->
-  <div id="offlineBanner" class="hidden bg-red-500 text-white text-xs font-bold px-4 py-2 flex justify-between items-center z-30 relative shadow-md"><span><i class="ph ph-wifi-slash mr-1"></i> Mode Offline Aktif. Gunakan data master yang tersimpan.</span></div>
+  <div id="offlineBanner" class="hidden bg-red-500 text-white text-xs font-bold px-4 py-2.5 flex justify-between items-center z-30 relative shadow-md">
+    <span>
+      <i class="ph ph-wifi-slash mr-1"></i> Mode Offline Aktif. Gunakan data master yang tersimpan. 
+      (<span id="offlineBannerCount" class="underline">0</span> data menunggu sinkronisasi)
+    </span>
+    <button id="offlineSyncBtn" onclick="syncOfflineData()" class="bg-white text-red-600 hover:bg-red-50 px-2.5 py-1 rounded-md font-bold transition text-[10px] uppercase shadow-sm">
+      <i class="ph ph-arrows-clockwise font-bold mr-1"></i> Sinkronkan
+    </button>
+  </div>
+
   <div id="syncBanner" class="hidden bg-orange-100 text-orange-800 border-b border-orange-200 text-sm font-semibold px-4 py-3 flex justify-between items-center z-30 relative shadow-md">
     <span><i class="ph ph-cloud-arrow-up mr-2 text-lg"></i> <span id="syncCount">0</span> Data Tersimpan Offline</span>
     <button onclick="syncOfflineData()" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded shadow text-xs transition">Sinkronisasi</button>
@@ -120,8 +129,8 @@
       <div class="text-center py-12 md:py-20 bg-white rounded-lg border border-gray-100 shadow-sm px-6">
         <div class="inline-block p-4 bg-theme4 bg-opacity-30 rounded-full mb-4"><i class="ph-fill ph-bounding-box text-6xl text-theme2"></i></div>
         <h2 class="text-3xl md:text-4xl font-bold text-theme1 mb-4">Selamat Datang di Culvert Monitoring</h2>
-        <p class="text-gray-500 mb-10 max-w-xl mx-auto text-sm md:text-base">Platform untuk inspeksi rutin Culvert dan Channelan di area pertambangan PT Adaro Indonesia.</p>
-        <button onclick="switchTab('survey')" class="bg-theme2 hover:bg-theme1 text-white font-bold py-3 px-6 rounded shadow transition"><i class="ph ph-plus-circle mr-2"></i> Mulai Inspeksi Baru</button>
+        <p class="text-gray-500 mb-10 max-w-xl mx-auto text-sm md:text-base">Platform inspeksi culvert dan channelan di area pertambangan PT Adaro Indonesia</p>
+        <button id="homeStartBtn" onclick="switchTab('survey')" class="bg-theme2 hover:bg-theme1 text-white font-bold py-3 px-6 rounded shadow transition"><i class="ph ph-plus-circle mr-2"></i> Mulai Inspeksi Baru</button>
       </div>
     </section>
 
@@ -261,7 +270,14 @@
             </div>
           </div>
 
-          <button type="submit" class="w-full bg-theme2 hover:bg-theme1 text-white font-bold py-3 rounded shadow transition uppercase tracking-wider text-xs">Kirim Laporan Inspeksi</button>
+          <button type="submit" id="submitReportBtn" class="w-full bg-theme2 hover:bg-theme1 text-white font-bold py-3 rounded shadow transition uppercase tracking-wider text-xs flex justify-center items-center gap-2">
+            <!-- Animasi Loading Spinner -->
+            <svg id="submitSpinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span id="submitBtnText">Kirim Laporan Inspeksi</span>
+          </button>
         </form>
       </div>
     </section>
@@ -413,7 +429,7 @@
         <!-- Garis Pembatas Vertikal (Hanya tampil pada layar sedang ke atas) -->
         <div class="hidden md:block w-[1px] h-9 bg-gray-200 self-end mb-0.5"></div>
 
-        <!-- Bagian 2: Pencarian Pintar ID Aset -->
+        <!-- Bagian 2: Pencarian ID Aset -->
         <div class="relative w-full md:w-auto flex-1">
           <div class="text-gray-500 font-bold mb-1 flex items-center gap-1.5">
             <i class="ph ph-magnifying-glass text-theme3 text-sm"></i> 
@@ -798,6 +814,7 @@
     // Merender dinamis Matriks Kepatuhan (Compliance Check)
     function renderComplianceFields(type) {
       const wrapper = document.getElementById('compliance_fields');
+      if (!wrapper) return;
       wrapper.innerHTML = "";
 
       let fields = [];
@@ -916,18 +933,32 @@
         optChannel.style.display = 'block';
       }
 
-      // Visibilitas Panel Admin
+      // Visibilitas Panel Admin & Penyesuaian Home Button Routing
+      const homeBtn = document.getElementById('homeStartBtn');
       if (mitraType === 'admin') {
         document.getElementById('desk-tab-admin').classList.remove('hidden');
         document.getElementById('mob-tab-admin').classList.remove('hidden');
+        document.getElementById('desk-tab-survey').classList.add('hidden');
+        document.getElementById('mob-tab-survey').classList.add('hidden');
+        if (homeBtn) {
+          homeBtn.innerHTML = `<i class="ph ph-chart-bar-highlight mr-2"></i> Lihat Dashboard Utama`;
+          homeBtn.onclick = () => switchTab('dashboard');
+        }
       } else {
         document.getElementById('desk-tab-admin').classList.add('hidden');
         document.getElementById('mob-tab-admin').classList.add('hidden');
+        document.getElementById('desk-tab-survey').classList.remove('hidden');
+        document.getElementById('mob-tab-survey').classList.remove('hidden');
+        if (homeBtn) {
+          homeBtn.innerHTML = `<i class="ph ph-plus-circle mr-2"></i> Mulai Inspeksi Baru`;
+          homeBtn.onclick = () => switchTab('survey');
+        }
       }
 
       // Sinkronisasi data real-time pasca login sukses
       Swal.fire({
         title: 'Mempersiapkan Sistem',
+        text: 'Mengunduh database master dan riwayat transaksi langsung dari Google Sheets...',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
       });
@@ -945,7 +976,7 @@
       Swal.fire({
         icon: 'success',
         title: 'Selamat Datang',
-        text: `Masuk sebagai ${roleVal} sukses!`,
+        text: `Masuk sebagai inspektor ${roleVal} sukses!`,
         timer: 1500,
         showConfirmButton: false
       });
@@ -957,9 +988,20 @@
     function logout() {
       state.user = null;
       document.getElementById('login-section').classList.remove('hidden');
-      document.body.classList.remove('no-scroll');
+      document.body.classList.add('no-scroll');
       document.getElementById('login_username').value = '';
       document.getElementById('login_password').value = '';
+
+      // Tampilkan kembali tombol survey
+      document.getElementById('desk-tab-survey').classList.remove('hidden');
+      document.getElementById('mob-tab-survey').classList.remove('hidden');
+      
+      const homeBtn = document.getElementById('homeStartBtn');
+      if (homeBtn) {
+        homeBtn.innerHTML = `<i class="ph ph-plus-circle mr-2"></i> Mulai Inspeksi Baru`;
+        homeBtn.onclick = () => switchTab('survey');
+      }
+
       if (!document.getElementById('mobile-menu').classList.contains('hidden')) {
         toggleMobileMenu();
       }
@@ -968,6 +1010,7 @@
     // Menampilkan dropdown Inspektor berdasarkan kontrak masuk
     function renderDatalists() {
       const select = document.getElementById('form_inspector_select');
+      if (!select) return;
       select.innerHTML = '<option value="">-- Pilih Inspektor --</option>';
       
       const currentContractor = state.user ? state.user.contractor : 'Semua';
@@ -985,23 +1028,28 @@
     function autofillNrp(name) {
       const match = state.inspectors.find(ins => ins.name === name);
       const nrpInput = document.getElementById('form_nrp');
-      if (match) {
-        nrpInput.value = match.nrp;
-      } else {
-        nrpInput.value = '';
+      if (nrpInput) {
+        if (match) {
+          nrpInput.value = match.nrp;
+        } else {
+          nrpInput.value = '';
+        }
       }
     }
 
     // Memfilter daftar aset berdasarkan tipe objek terpilih
     function filterAssetDropdown(type) {
       const select = document.getElementById('sheetObjectSelect');
+      if (!select) return;
       select.innerHTML = '<option value="">-- Pilih Titik --</option>';
       
       const currentContractor = state.user ? state.user.contractor : 'Semua';
 
       if (type === 'culvert') {
-        document.getElementById('ews_culvert_fields').classList.remove('hidden');
-        document.getElementById('ews_channel_fields').classList.add('hidden');
+        const fieldsC = document.getElementById('ews_culvert_fields');
+        const fieldsCh = document.getElementById('ews_channel_fields');
+        if (fieldsC) fieldsC.classList.remove('hidden');
+        if (fieldsCh) fieldsCh.classList.add('hidden');
 
         const filtered = state.culverts.filter(clv => currentContractor === 'Semua' || clv.contractor === currentContractor);
         filtered.forEach(clv => {
@@ -1011,8 +1059,10 @@
           select.appendChild(opt);
         });
       } else {
-        document.getElementById('ews_culvert_fields').classList.add('hidden');
-        document.getElementById('ews_channel_fields').classList.remove('hidden');
+        const fieldsC = document.getElementById('ews_culvert_fields');
+        const fieldsCh = document.getElementById('ews_channel_fields');
+        if (fieldsC) fieldsC.classList.add('hidden');
+        if (fieldsCh) fieldsCh.classList.remove('hidden');
 
         const filteredChannels = state.channels.filter(chn => currentContractor === 'Semua' || chn.contractor === currentContractor);
         filteredChannels.forEach(chn => {
@@ -1031,6 +1081,8 @@
       const latInput = document.getElementById('form_latitude');
       const lngInput = document.getElementById('form_longitude');
       
+      if (!latInput || !lngInput) return;
+
       if (!val) {
         latInput.value = '';
         lngInput.value = '';
@@ -1053,6 +1105,8 @@
       const latInput = document.getElementById('form_latitude');
       const lngInput = document.getElementById('form_longitude');
       
+      if (!latInput || !lngInput) return;
+
       latInput.value = 'Mencari...';
       lngInput.value = 'Mencari...';
       
@@ -1077,7 +1131,7 @@
       }
     }
 
-    // Pengiriman Laporan Inspeksi Baru
+    // Pengiriman Laporan Inspeksi Baru dengan Integrasi Perbaikan Form & Animasi Spinner
     async function handleFormSubmit(e) {
       e.preventDefault();
       
@@ -1090,6 +1144,14 @@
         return;
       }
 
+      // Aktifkan animasi loading spinner dan nonaktifkan tombol
+      const submitSpinner = document.getElementById('submitSpinner');
+      const submitBtnText = document.getElementById('submitBtnText');
+      const submitBtn = document.getElementById('submitReportBtn');
+      if (submitSpinner) submitSpinner.classList.remove('hidden');
+      if (submitBtnText) submitBtnText.innerText = 'Mengirim Laporan...';
+      if (submitBtn) submitBtn.disabled = true;
+
       const latitudeValue = document.getElementById('form_latitude').value;
       const longitudeValue = document.getElementById('form_longitude').value;
 
@@ -1098,9 +1160,11 @@
       const currentRole = state.user ? state.user.contractor : 'BUMA';
       const mitraType = state.user ? state.user.mitraType : 'mining';
 
-      const sedimentVal = objType === 'culvert' ? document.getElementById('ews_c_sediment').value : document.getElementById('ews_ch_sediment').value;
-      const structureVal = objType === 'culvert' ? document.getElementById('ews_c_structure').value : '0';
-      const boxVal = objType === 'culvert' ? document.getElementById('ews_c_box').value : '0';
+      // Koreksi pembagian data sedimentasi & parameter kondisi agar tidak ganda keisi
+      const culvertSedimentVal = objType === 'culvert' ? document.getElementById('ews_c_sediment').value : "";
+      const channelSedimentVal = objType === 'channel' ? document.getElementById('ews_ch_sediment').value : "";
+      const culvertStructureVal = objType === 'culvert' ? document.getElementById('ews_c_structure').value : "";
+      const culvertBoxControlVal = objType === 'culvert' ? document.getElementById('ews_c_box').value : "";
 
       const fileInletEl = document.getElementById('file_inlet').files[0];
       const fileOutletEl = document.getElementById('file_outlet').files[0];
@@ -1120,13 +1184,18 @@
       const inspectionDate = document.getElementById('form_date').value || new Date().toISOString();
 
       // Kalkulasi Early Warning System (EWS) secara lokal
-      const numericEWSLocal = (parseFloat(sedimentVal) * 4) + (parseInt(structureVal) * 3) + (parseInt(boxVal) === 0 ? 1 : 0);
+      const dummySedimentForEws = objType === 'culvert' ? parseFloat(culvertSedimentVal || 0.25) : parseFloat(channelSedimentVal || 0.25);
+      const dummyStructureForEws = objType === 'culvert' ? parseInt(culvertStructureVal || 0) : 0;
+      const dummyBoxForEws = objType === 'culvert' ? parseInt(culvertBoxControlVal || 0) : 0;
+
+      const numericEWSLocal = (dummySedimentForEws * 4) + (dummyStructureForEws * 3) + (dummyBoxForEws === 0 ? 1 : 0);
       let localStatusEws = 'Low';
       const normScore = numericEWSLocal / 3;
       if (normScore >= 0.75) localStatusEws = 'Critical';
       else if (normScore >= 0.50) localStatusEws = 'High';
       else if (normScore >= 0.25) localStatusEws = 'Medium';
 
+      // Pemetaan data Payload dengan penyesuaian multi-case & penyimpanan kolom "participants"
       const payload = {
         action: 'processFormLogic',
         data: {
@@ -1137,6 +1206,8 @@
           Inspector: selectedInspect,
           inspector: selectedInspect,
           Participants: document.getElementById('form_participants').value,
+          participants: document.getElementById('form_participants').value, // Problem #1 fixed
+          Participants_Tim: document.getElementById('form_participants').value,
           Location: currentRole,
           location: currentRole,
           Mitra: currentRole,
@@ -1154,13 +1225,21 @@
           idCulvert: objType === 'culvert' ? cleanId : '',
           IDChannel: objType === 'channel' ? cleanId : '',
           idChannel: objType === 'channel' ? cleanId : '',
-          culvertSediment: sedimentVal,
-          channelSediment: sedimentVal,
-          culvertStucture: structureVal,
-          culvertBoxControl: boxVal,
+          
+          // Problem #2 fixed (Pemisahan sedimentasi & kondisi)
+          culvertSediment: culvertSedimentVal,
+          channelSediment: channelSedimentVal,
+          culvertStucture: culvertStructureVal,
+          culvertBoxControl: culvertBoxControlVal,
+
+          // Problem #6 fixed (Fallback properties untuk Base64 Dropbox GAS)
           photoInletBase64: base64Inlet,
           photoOutletBase64: base64Outlet,
           photoOtherBase64: base64Other,
+          photo_inlet: base64Inlet,
+          photo_outlet: base64Outlet,
+          photo_other: base64Other,
+
           Status: 'Pending',
           TimeStamp: new Date().toISOString()
         }
@@ -1193,21 +1272,26 @@
         });
         
         saveStateToStorage();
+
+        // Matikan loading spinner
+        if (submitSpinner) submitSpinner.classList.add('hidden');
+        if (submitBtnText) submitBtnText.innerText = 'Kirim Laporan Inspeksi';
+        if (submitBtn) submitBtn.disabled = false;
+
+        // Problem #4 fixed (Tulisan pesan khusus offline)
         Swal.fire({
           icon: 'warning',
-          title: 'Mode Offline Aktif',
-          text: 'Koneksi internet terputus. Laporan disimpan dalam memori lokal sementara.',
+          title: 'Tersimpan Offline',
+          text: 'Data berhasil tersimpan offline, sinkronkan saat ada jaringan.',
           confirmButtonText: 'OK'
         });
+
+        // Problem #5 fixed (Auto-reset form dan reload waktu)
+        document.getElementById('inspectionForm').reset();
+        prefillCurrentDateTime();
+        syncOfflineBanners();
         switchTab('dashboard');
       } else {
-        Swal.fire({
-          title: 'Mengirim Laporan',
-          text: 'Mengunggah laporan ke Google Sheets & Dropbox...',
-          allowOutsideClick: false,
-          didOpen: () => { Swal.showLoading(); }
-        });
-
         try {
           await fetch(API_URL, {
             method: 'POST',
@@ -1215,7 +1299,11 @@
           });
 
           await loadLiveInspections();
-          Swal.close();
+
+          // Matikan loading spinner
+          if (submitSpinner) submitSpinner.classList.add('hidden');
+          if (submitBtnText) submitBtnText.innerText = 'Kirim Laporan Inspeksi';
+          if (submitBtn) submitBtn.disabled = false;
 
           Swal.fire({
             icon: 'success',
@@ -1224,20 +1312,31 @@
             timer: 2000,
             showConfirmButton: false
           });
+
+          // Problem #5 fixed (Auto-reset form dan reload waktu)
+          document.getElementById('inspectionForm').reset();
+          prefillCurrentDateTime();
+          syncOfflineBanners();
           switchTab('dashboard');
         } catch (error) {
           console.warn("Jaringan bermasalah. Menyimpan ke daftar tunggu offline.", error);
           state.offlineInspections.push(payload);
           saveStateToStorage();
-          Swal.close();
-          Swal.fire('Data Disimpan Lokal', 'Terjadi gangguan jaringan, data berhasil diamankan di ponsel Anda.', 'info');
+
+          // Matikan loading spinner
+          if (submitSpinner) submitSpinner.classList.add('hidden');
+          if (submitBtnText) submitBtnText.innerText = 'Kirim Laporan Inspeksi';
+          if (submitBtn) submitBtn.disabled = false;
+
+          Swal.fire('Data Disimpan Lokal', 'Data berhasil tersimpan offline, sinkronkan saat ada jaringan.', 'info');
+
+          // Problem #5 fixed (Auto-reset form dan reload waktu)
+          document.getElementById('inspectionForm').reset();
+          prefillCurrentDateTime();
+          syncOfflineBanners();
           switchTab('dashboard');
         }
       }
-
-      document.getElementById('inspectionForm').reset();
-      prefillCurrentDateTime();
-      syncOfflineBanners();
     }
 
     // Mengelola indikator banner status online/offline
@@ -1246,6 +1345,7 @@
       const bannerSync = document.getElementById('syncBanner');
       const syncCount = document.getElementById('syncCount');
       const indicatorMobile = document.getElementById('offlineIndicatorMobile');
+      const offlineBannerCount = document.getElementById('offlineBannerCount');
 
       if (!navigator.onLine) {
         if (bannerOffline) bannerOffline.classList.remove('hidden');
@@ -1253,6 +1353,11 @@
       } else {
         if (bannerOffline) bannerOffline.classList.add('hidden');
         if (indicatorMobile) indicatorMobile.classList.add('hidden');
+      }
+
+      // Problem #4 fixed (Menghitung item tertunda offline)
+      if (offlineBannerCount) {
+        offlineBannerCount.innerText = state.offlineInspections.length;
       }
 
       if (state.offlineInspections.length > 0 && navigator.onLine) {
@@ -1371,12 +1476,13 @@
 
       const tbody = document.getElementById('dashboardTableBody');
       const emptyDiv = document.getElementById('dashTableEmpty');
+      if (!tbody) return;
       tbody.innerHTML = '';
 
       if (records.length === 0) {
-        emptyDiv.classList.remove('hidden');
+        if (emptyDiv) emptyDiv.classList.remove('hidden');
       } else {
-        emptyDiv.classList.add('hidden');
+        if (emptyDiv) emptyDiv.classList.add('hidden');
         records.forEach(rec => {
           let rClass = "bg-green-100 text-green-800";
           if (rec.riskLevel === 'Medium') rClass = "bg-amber-100 text-amber-800";
@@ -1453,7 +1559,9 @@
       data.forEach(d => { if (counts[d.riskLevel] !== undefined) counts[d.riskLevel]++; });
 
       if (state.charts.risk) state.charts.risk.destroy();
-      const ctx = document.getElementById('riskChart').getContext('2d');
+      const el = document.getElementById('riskChart');
+      if (!el) return;
+      const ctx = el.getContext('2d');
       state.charts.risk = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -1480,7 +1588,9 @@
       data.forEach(d => { if (counts[d.lastCheckCategory] !== undefined) counts[d.lastCheckCategory]++; });
 
       if (state.charts.time) state.charts.time.destroy();
-      const ctx = document.getElementById('timeChart').getContext('2d');
+      const el = document.getElementById('timeChart');
+      if (!el) return;
+      const ctx = el.getContext('2d');
       state.charts.time = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -1507,7 +1617,9 @@
       data.forEach(d => { if (counts[d.priority] !== undefined) counts[d.priority]++; });
 
       if (state.charts.prio) state.charts.prio.destroy();
-      const ctx = document.getElementById('prioChart').getContext('2d');
+      const el = document.getElementById('prioChart');
+      if (!el) return;
+      const ctx = el.getContext('2d');
       state.charts.prio = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -1681,6 +1793,7 @@
     // Logika Pemrosesan Pencarian ID Pintar pada Peta Citra Satelit
     function handleMapSearch(query) {
       const suggestions = document.getElementById('mapSearchSuggestions');
+      if (!suggestions) return;
       if (!query.trim()) {
         suggestions.classList.add('hidden');
         suggestions.innerHTML = '';
@@ -1725,7 +1838,8 @@
     // Eksekusi Panning, Zoom-in, dan Pembukaan Popup Penanda ketika ID Hasil Cari Diklik
     function selectMapSearchResult(id) {
       document.getElementById('mapSearchInput').value = id;
-      document.getElementById('mapSearchSuggestions').classList.add('hidden');
+      const sugg = document.getElementById('mapSearchSuggestions');
+      if (sugg) sugg.classList.add('hidden');
 
       // Cari marker yang sesuai di array mapMarkers
       const matchMarker = mapMarkers.find(m => m.clvId === id);
@@ -1781,17 +1895,20 @@
       document.getElementById('modalMgmt').classList.add('hidden');
     }
 
-    // Menyimpan form kustom panel admin
+    // Problem #7 fixed - Menyimpan form kustom panel admin ke Google Sheets & Dropbox
     async function saveMgmt(e) {
       e.preventDefault();
       const type = document.getElementById('mgmt_type').value;
 
       Swal.fire({
         title: 'Menyimpan...',
-        text: 'Menghubungkan ke penyimpanan...',
+        text: 'Menghubungkan ke Google Sheets API...',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
       });
+
+      let actionName = '';
+      let apiPayload = {};
 
       try {
         if (type === 'inspector') {
@@ -1805,6 +1922,8 @@
           }
 
           state.inspectors.push({ name, nrp, contractor: mitra });
+          actionName = 'addInspector';
+          apiPayload = { nama: name, nrp: nrp, perusahaan: mitra };
         } 
         else if (type === 'culvert') {
           const id = document.getElementById('clv_id').value.trim().toUpperCase();
@@ -1831,6 +1950,8 @@
             jml_line: jmlLine,
             type: objType
           });
+          actionName = 'addCulvert';
+          apiPayload = { id: id, lat: lat, lng: lng, jml_line: jmlLine, prioritas: priority, mitra: mitra, type: objType };
         } 
         else if (type === 'updateLine') {
           const id = document.getElementById('update_line_culvert_id').value;
@@ -1845,6 +1966,8 @@
           if (match) {
             match.jml_line = newlineVal !== '' ? parseInt(newlineVal) : '';
           }
+          actionName = 'updateCulvertLine';
+          apiPayload = { id: id, jml_line: newlineVal !== '' ? parseInt(newlineVal) : '' };
         }
         else if (type === 'channel') {
           const chnId = document.getElementById('chn_id').value.trim().toUpperCase();
@@ -1859,28 +1982,52 @@
             id: chnId,
             contractor: chnPerusahaan
           });
+          actionName = 'addChannel';
+          apiPayload = { id: chnId, lokasi: chnPerusahaan };
         }
 
         saveStateToStorage();
         closeMgmtModal();
         document.getElementById('mgmtForm').reset();
-        Swal.close();
 
-        Swal.fire('Sukses', 'Data master berhasil diperbarui secara lokal. Gunakan sync manual jika Anda ingin menulis langsung ke Google Sheets.', 'success');
-        
+        const isOnline = navigator.onLine;
+        if (isOnline) {
+          // Melakukan request POST ke web app Google Apps Script
+          await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              action: actionName,
+              data: apiPayload
+            })
+          });
+
+          // Memuat ulang database sheets terbaru
+          await loadSheetsAPIData();
+          await loadLiveInspections();
+
+          Swal.close();
+          Swal.fire('Sukses', 'Data master berhasil disimpan ke Google Sheets secara real-time!', 'success');
+        } else {
+          Swal.close();
+          Swal.fire('Sukses Lokal', 'Data disimpan ke penyimpanan peramban lokal. Hubungkan ke internet untuk singkronisasi ke Google Sheets.', 'success');
+        }
+
         renderDatalists();
         filterAssetDropdown(document.getElementById('form_object_type').value);
         renderAdminQuickView();
         if (map) renderMapMarkers();
 
       } catch (error) {
-        Swal.fire('Gagal Menyimpan', 'Terjadi kesalahan sistem.', 'error');
+        console.error("Gagal melakukan penulisan master ke spreadsheet.", error);
+        Swal.close();
+        Swal.fire('Gagal Sinkron', 'Data master tersimpan lokal di peramban.', 'warning');
       }
     }
 
     // Peninjauan cepat database master
     function renderAdminQuickView() {
       const trg = document.getElementById('adminQuickView');
+      if (!trg) return;
       trg.innerHTML = '';
       
       trg.innerHTML += `<div class="font-bold text-theme1 border-b pb-0.5 mb-1 flex items-center gap-1"><i class="ph ph-users"></i> INSPECTORS (${state.inspectors.length})</div>`;
@@ -1938,6 +2085,7 @@
     // Merender Legenda Peta
     function drawMapLegends(indicator) {
       const container = document.getElementById('mapLegendContent');
+      if (!container) return;
       container.innerHTML = "";
 
       if (indicator === 'risk') {
@@ -2017,7 +2165,7 @@
 
     function toggleMobileMenu() {
       const menu = document.getElementById('mobile-menu');
-      menu.classList.toggle('hidden');
+      if (menu) menu.classList.toggle('hidden');
     }
 
     // Hook Inisialisasi Halaman
@@ -2040,7 +2188,8 @@
 
     function toggleMgmtFields(type) {
       document.querySelectorAll('.mgmt-field-group').forEach(el => el.classList.add('hidden'));
-      document.getElementById(`field-group-${type}`).classList.remove('hidden');
+      const targetGroup = document.getElementById(`field-group-${type}`);
+      if (targetGroup) targetGroup.classList.remove('hidden');
     }
 
     // Melakukan inspeksi instan langsung dari Map popup click
@@ -2048,12 +2197,15 @@
       const isCulvert = state.culverts.find(c => c.id === id);
       const type = isCulvert ? 'culvert' : 'channel';
       
-      document.getElementById('form_object_type').value = type;
+      const typeSel = document.getElementById('form_object_type');
+      if (typeSel) typeSel.value = type;
       filterAssetDropdown(type);
       
       const select = document.getElementById('sheetObjectSelect');
-      select.value = id;
-      autofillObjectDetails(id);
+      if (select) {
+        select.value = id;
+        autofillObjectDetails(id);
+      }
       
       switchTab('survey');
     }
