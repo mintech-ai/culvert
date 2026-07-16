@@ -1823,7 +1823,7 @@
           if (rec.compliance >= 80) compBadgeClass = "text-emerald-600 bg-emerald-50";
           else if (rec.compliance >= 50) compBadgeClass = "text-amber-600 bg-amber-50";
 
-          const inspectorName = rec.inspectors || rec.Inspectors || '-';
+          const inspectorName = rec.Inspector || rec.Inspector || '-';
           const formattedDate = rec.date ? rec.date.replace('T', ' ') : '-';
 
           const row = `
