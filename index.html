@@ -551,10 +551,12 @@
         { id: "CH-PIT-02", contractor: "SIS" },
         { id: "CH-PIT-03", contractor: "PPA" }
       ],
+      // Menambahkan properti "inspector" pada data inspeksi default agar dapat tampil
       inspections: JSON.parse(localStorage.getItem('clv_inspections')) || [
         {
           id: "CLV-20260620100000",
           idCulvert: "CV-PIT-01",
+          inspector: "Andi Saputra",
           contractor: "BUMA",
           date: "2026-06-20 10:00:00",
           weather: "Cerah",
@@ -572,6 +574,7 @@
         {
           id: "CLV-20260515093000",
           idCulvert: "CV-PIT-04",
+          inspector: "Budi Setiawan",
           contractor: "ADARO INDONESIA",
           date: "2026-05-15 09:30:00",
           weather: "Pasca Hujan",
@@ -819,6 +822,8 @@
             state.inspections = result.mapData.map(row => ({
               id: row.id_inspection || '',
               idCulvert: row.id_object || '',
+              // Perbaikan: Petakan nilai "inspector" dari sheet API ke state lokal
+              inspector: row.inspector || row.Inspector || '-',
               contractor: row.mitra || '',
               date: row.datetime || '',
               weather: row.weather_condition || 'Cerah',
@@ -1278,6 +1283,8 @@
         state.inspections.unshift({
           id: inspectionId,
           idCulvert: cleanId,
+          // Perbaikan: Tambah "inspector" agar saat offline tetap bisa langsung terbaca
+          inspector: selectedInspect,
           contractor: currentRole,
           date: inspectionDate,
           weather: payload.data.weather,
@@ -1339,6 +1346,26 @@
         } catch (error) {
           console.warn("Jaringan bermasalah. Menyimpan ke daftar tunggu offline.", error);
           state.offlineInspections.push(payload);
+          
+          state.inspections.unshift({
+            id: inspectionId,
+            idCulvert: cleanId,
+            // Perbaikan: Tambah "inspector" agar saat beralih ke offline tetap terbaca
+            inspector: selectedInspect,
+            contractor: currentRole,
+            date: inspectionDate,
+            weather: payload.data.weather,
+            participants: payload.data.Participants,
+            type: objType,
+            riskLevel: localStatusEws,
+            lastCheckCategory: 'Hari Ini',
+            priority: sourceCulvert ? sourceCulvert.priority : '',
+            lineCount: getCulvertLineCount(cleanId),
+            compliance: localCompliance,
+            fileInlet: '',
+            fileOutlet: '',
+            fileOther: ''
+          });
           saveStateToStorage();
 
           if (submitSpinner) submitSpinner.classList.add('hidden');
@@ -1823,7 +1850,8 @@
           if (rec.compliance >= 80) compBadgeClass = "text-emerald-600 bg-emerald-50";
           else if (rec.compliance >= 50) compBadgeClass = "text-amber-600 bg-amber-50";
 
-          const inspectorName = rec.Inspector || rec.Inspector || '-';
+          // Perbaikan: Ganti rec.Inspector || rec.Inspector ke rec.inspector || rec.Inspector untuk menjaga kompatibilitas case sensitivity
+          const inspectorName = rec.inspector || rec.Inspector || '-';
           const formattedDate = rec.date ? rec.date.replace('T', ' ') : '-';
 
           const row = `
