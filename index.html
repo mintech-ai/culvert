@@ -220,13 +220,26 @@
           <!-- Blok Metadata -->
           <div class="bg-gray-50 p-4 rounded border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
             <div>
-              <label class="block text-[11px] font-bold mb-1 uppercase text-theme2">Nama Inspektor <span
-                  class="text-red-500">*</span></label>
-              <select id="form_inspector_select" required
-                class="border p-2 w-full rounded focus:outline-none focus:border-theme2 bg-white text-gray-700 font-semibold"
-                onchange="autofillNrp(this.value)">
-                <option value="">-- Pilih Inspektor --</option>
-              </select>
+              <label class="block text-[11px] font-bold mb-1 uppercase text-theme2">
+                Nama Inspektor <span class="text-red-500">*</span>
+              </label>
+              <div class="relative" id="inspector_search_wrapper">
+                <input type="text" id="form_inspector_input" required autocomplete="off"
+                  class="w-full border border-gray-300 rounded p-2 pr-8 focus:outline-none focus:border-theme2 bg-white text-gray-700 font-semibold text-xs transition shadow-sm"
+                  placeholder="Pilih inspektor..." onfocus="openInspectorDropdown()"
+                  oninput="filterInspectorOptions(this.value)" onkeydown="handleInspectorKeydown(event)">
+                <span onclick="toggleInspectorDropdown()"
+                  class="absolute inset-y-0 right-0 flex items-center pr-2.5 cursor-pointer text-gray-400 hover:text-theme2">
+                  <i class="ph ph-caret-down text-sm transition-transform duration-200" id="inspector_caret"></i>
+                </span>
+                <select id="form_inspector_select" class="hidden">
+                  <option value="">-- Pilih Inspektor --</option>
+                </select>
+                <div id="inspector_dropdown_list"
+                  class="hidden absolute left-0 right-0 top-full mt-1 max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-xl z-50 divide-y divide-gray-100 text-xs">
+                  <!-- Dimuat Dinamis -->
+                </div>
+              </div>
             </div>
             <div>
               <label class="block text-[11px] font-bold mb-1 text-gray-400 uppercase">NRP</label>
@@ -270,12 +283,26 @@
               </select>
             </div>
             <div>
-              <label class="block text-[11px] font-bold mb-1 uppercase text-theme2">Pilih ID Objek <span
-                  class="text-red-500">*</span></label>
-              <select id="sheetObjectSelect" onchange="autofillObjectDetails(this.value)" required
-                class="w-full border-2 border-theme3 rounded p-2 font-bold focus:outline-none bg-white">
-                <option value="">-- Pilih Titik --</option>
-              </select>
+              <label class="block text-[11px] font-bold mb-1 uppercase text-theme2">
+                Pilih ID Objek <span class="text-red-500">*</span>
+              </label>
+              <div class="relative" id="object_search_wrapper">
+                <input type="text" id="form_object_input" required autocomplete="off"
+                  class="w-full border-2 border-theme3 rounded p-2 pr-8 font-bold focus:outline-none focus:border-theme2 bg-white text-gray-800 text-xs transition shadow-sm"
+                  placeholder="Pilih ID culvert / channel..." onfocus="openObjectDropdown()"
+                  oninput="filterObjectOptions(this.value)" onkeydown="handleObjectKeydown(event)">
+                <span onclick="toggleObjectDropdown()"
+                  class="absolute inset-y-0 right-0 flex items-center pr-2.5 cursor-pointer text-theme3 hover:text-theme2">
+                  <i class="ph ph-caret-down text-base transition-transform duration-200" id="object_caret"></i>
+                </span>
+                <select id="sheetObjectSelect" class="hidden">
+                  <option value="">-- Pilih Titik --</option>
+                </select>
+                <div id="object_dropdown_list"
+                  class="hidden absolute left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto bg-white border-2 border-theme3 rounded-lg shadow-xl z-50 divide-y divide-gray-100 text-xs">
+                  <!-- Dimuat Dinamis -->
+                </div>
+              </div>
             </div>
 
             <div class="md:col-span-2 bg-theme5 bg-opacity-20 p-3 rounded border border-theme4">
@@ -671,7 +698,7 @@
           </div>
           <div class="relative">
             <input type="text" id="mapSearchInput" oninput="handleMapSearch(this.value)"
-              placeholder="Ketik ID (Contoh: CV-PIT-01)..."
+              placeholder="Pilih ID (Contoh: CV-PIT-01)..."
               class="bg-gray-50 border border-gray-300 rounded-lg pl-8 pr-2.5 py-1.5 font-bold text-theme1 focus:outline-none focus:border-theme3 text-[11px] w-full md:w-[220px]"
               autocomplete="off">
             <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-gray-400"><i
@@ -743,7 +770,7 @@
                   class="text-red-500">*</span>:</label>
               <input type="text" id="clv_lokasi"
                 class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none"
-                placeholder="Contoh: KM 12 Pit Barat">
+                placeholder="Contoh: Pit North">
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
@@ -1272,6 +1299,7 @@
         localStorage.removeItem('clv_saved_creds');
       }
       localStorage.setItem('clv_user_session', JSON.stringify(state.user));
+      localStorage.setItem('clv_active_tab', 'home');
 
       applyUserSession(state.user);
 
@@ -1300,7 +1328,7 @@
         showConfirmButton: false
       });
 
-      switchTab('home');
+      proceedSwitchTab('home');
     }
 
     function applyUserSession(userObj) {
@@ -1392,6 +1420,8 @@
     function performLogout() {
       state.user = null;
       localStorage.removeItem('clv_user_session');
+      localStorage.removeItem('clv_active_tab');
+      sessionStorage.removeItem('clv_admin_authenticated');
 
       document.getElementById('login-section').classList.remove('hidden');
       document.body.classList.add('no-scroll');
@@ -1423,40 +1453,176 @@
       }
     }
 
+    // ==========================================
+    // SEARCHABLE DROPDOWNS LOGIC (INSPECTOR & ASSET)
+    // ==========================================
+    let activeInspectorIndex = -1;
+    let activeObjectIndex = -1;
+
     function renderDatalists() {
       const select = document.getElementById('form_inspector_select');
-      if (!select) return;
-      select.innerHTML = '<option value="">-- Pilih Inspektor --</option>';
+      if (select) select.innerHTML = '<option value="">-- Pilih Inspektor --</option>';
 
       const currentContractor = state.user ? state.user.contractor : 'Semua';
       const filtered = state.inspectors.filter(ins => currentContractor === 'Semua' || ins.contractor === currentContractor);
 
-      filtered.forEach(ins => {
-        const option = document.createElement('option');
-        option.value = ins.name;
-        option.innerText = ins.name;
-        select.appendChild(option);
+      if (select) {
+        filtered.forEach(ins => {
+          const option = document.createElement('option');
+          option.value = ins.name;
+          option.innerText = ins.name;
+          select.appendChild(option);
+        });
+      }
+
+      renderInspectorDropdownItems(filtered);
+    }
+
+    function renderInspectorDropdownItems(list) {
+      const dropdown = document.getElementById('inspector_dropdown_list');
+      if (!dropdown) return;
+      dropdown.innerHTML = '';
+      activeInspectorIndex = -1;
+
+      if (list.length === 0) {
+        dropdown.innerHTML = '<div class="p-3 text-center text-gray-400 italic">Inspector tidak ditemukan</div>';
+        return;
+      }
+
+      list.forEach((ins, idx) => {
+        const item = document.createElement('div');
+        item.className = 'p-2.5 hover:bg-theme5 hover:bg-opacity-40 cursor-pointer flex justify-between items-center transition inspector-opt-item';
+        item.dataset.index = idx;
+        item.innerHTML = `
+          <div class="flex flex-col">
+            <span class="font-bold text-gray-800">${ins.name}</span>
+            <span class="text-[10px] text-gray-500 font-mono">NRP: ${ins.nrp}</span>
+          </div>
+          <span class="text-[10px] bg-theme1 text-white font-mono px-1.5 py-0.5 rounded font-semibold">${ins.contractor}</span>
+        `;
+        item.onmousedown = (e) => {
+          e.preventDefault();
+          selectInspectorOption(ins);
+        };
+        dropdown.appendChild(item);
       });
     }
 
+    function openInspectorDropdown() {
+      const dropdown = document.getElementById('inspector_dropdown_list');
+      if (!dropdown) return;
+      const currentContractor = state.user ? state.user.contractor : 'Semua';
+      const query = (document.getElementById('form_inspector_input')?.value || '').toLowerCase().trim();
+      const filtered = state.inspectors.filter(ins => {
+        if (currentContractor !== 'Semua' && ins.contractor !== currentContractor) return false;
+        if (!query) return true;
+        return (ins.name || '').toLowerCase().includes(query) || (ins.nrp || '').toLowerCase().includes(query);
+      });
+      renderInspectorDropdownItems(filtered);
+      dropdown.classList.remove('hidden');
+      const caret = document.getElementById('inspector_caret');
+      if (caret) caret.classList.add('rotate-180');
+    }
+
+    function closeInspectorDropdown() {
+      const dropdown = document.getElementById('inspector_dropdown_list');
+      if (dropdown) dropdown.classList.add('hidden');
+      const caret = document.getElementById('inspector_caret');
+      if (caret) caret.classList.remove('rotate-180');
+      activeInspectorIndex = -1;
+    }
+
+    function toggleInspectorDropdown() {
+      const dropdown = document.getElementById('inspector_dropdown_list');
+      if (dropdown && !dropdown.classList.contains('hidden')) {
+        closeInspectorDropdown();
+      } else {
+        const input = document.getElementById('form_inspector_input');
+        if (input) input.focus();
+        openInspectorDropdown();
+      }
+    }
+
+    function filterInspectorOptions(query) {
+      openInspectorDropdown();
+      const currentContractor = state.user ? state.user.contractor : 'Semua';
+      const cleanQuery = query.toLowerCase().trim();
+
+      const exactMatch = state.inspectors.find(ins => {
+        if (currentContractor !== 'Semua' && ins.contractor !== currentContractor) return false;
+        return (ins.name || '').toLowerCase() === cleanQuery;
+      });
+      if (exactMatch) {
+        autofillNrp(exactMatch.name);
+        const sel = document.getElementById('form_inspector_select');
+        if (sel) sel.value = exactMatch.name;
+      } else if (!cleanQuery) {
+        autofillNrp('');
+        const sel = document.getElementById('form_inspector_select');
+        if (sel) sel.value = '';
+      }
+    }
+
+    function selectInspectorOption(ins) {
+      const input = document.getElementById('form_inspector_input');
+      const select = document.getElementById('form_inspector_select');
+      if (input) input.value = ins.name;
+      if (select) select.value = ins.name;
+      autofillNrp(ins.name);
+      closeInspectorDropdown();
+    }
+
+    function handleInspectorKeydown(e) {
+      const dropdown = document.getElementById('inspector_dropdown_list');
+      if (!dropdown || dropdown.classList.contains('hidden')) {
+        if (e.key === 'ArrowDown' || e.key === 'Enter') {
+          openInspectorDropdown();
+          e.preventDefault();
+        }
+        return;
+      }
+
+      const items = dropdown.querySelectorAll('.inspector-opt-item');
+      if (items.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeInspectorIndex = (activeInspectorIndex + 1) % items.length;
+        updateActiveDropdownHighlight(items, activeInspectorIndex);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeInspectorIndex = (activeInspectorIndex - 1 + items.length) % items.length;
+        updateActiveDropdownHighlight(items, activeInspectorIndex);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeInspectorIndex >= 0 && activeInspectorIndex < items.length) {
+          items[activeInspectorIndex].dispatchEvent(new MouseEvent('mousedown'));
+        } else if (items.length > 0) {
+          items[0].dispatchEvent(new MouseEvent('mousedown'));
+        }
+      } else if (e.key === 'Escape' || e.key === 'Tab') {
+        closeInspectorDropdown();
+      }
+    }
+
     function autofillNrp(name) {
-      const match = state.inspectors.find(ins => ins.name === name);
+      const cleanName = (name || '').trim().toLowerCase();
+      const match = state.inspectors.find(ins => (ins.name || '').trim().toLowerCase() === cleanName);
       const nrpInput = document.getElementById('form_nrp');
       if (nrpInput) {
-        if (match) {
-          nrpInput.value = match.nrp;
-        } else {
-          nrpInput.value = '';
-        }
+        nrpInput.value = match ? match.nrp : '';
       }
     }
 
     function filterAssetDropdown(type) {
       const select = document.getElementById('sheetObjectSelect');
-      if (!select) return;
-      select.innerHTML = '<option value="">-- Pilih Titik --</option>';
+      if (select) select.innerHTML = '<option value="">-- Pilih Titik --</option>';
 
       const currentContractor = state.user ? state.user.contractor : 'Semua';
+      const input = document.getElementById('form_object_input');
+      if (input) {
+        input.placeholder = type === 'culvert' ? 'Pilih ID culvert ...' : 'Pilih ID channel ...';
+      }
 
       if (type === 'culvert') {
         const fieldsC = document.getElementById('ews_culvert_fields');
@@ -1465,12 +1631,15 @@
         if (fieldsCh) fieldsCh.classList.add('hidden');
 
         const filtered = state.culverts.filter(clv => currentContractor === 'Semua' || clv.contractor === currentContractor);
-        filtered.forEach(clv => {
-          const opt = document.createElement('option');
-          opt.value = clv.id;
-          opt.innerText = clv.id;
-          select.appendChild(opt);
-        });
+        if (select) {
+          filtered.forEach(clv => {
+            const opt = document.createElement('option');
+            opt.value = clv.id;
+            opt.innerText = clv.id;
+            select.appendChild(opt);
+          });
+        }
+        renderObjectDropdownItems(filtered, 'culvert');
       } else {
         const fieldsC = document.getElementById('ews_culvert_fields');
         const fieldsCh = document.getElementById('ews_channel_fields');
@@ -1478,16 +1647,206 @@
         if (fieldsCh) fieldsCh.classList.remove('hidden');
 
         const filteredChannels = state.channels.filter(chn => currentContractor === 'Semua' || chn.contractor === currentContractor);
-        filteredChannels.forEach(chn => {
-          const opt = document.createElement('option');
-          opt.value = chn.id;
-          opt.innerText = chn.id;
-          select.appendChild(opt);
-        });
+        if (select) {
+          filteredChannels.forEach(chn => {
+            const opt = document.createElement('option');
+            opt.value = chn.id;
+            opt.innerText = chn.id;
+            select.appendChild(opt);
+          });
+        }
+        renderObjectDropdownItems(filteredChannels, 'channel');
       }
 
       renderComplianceFields(type);
     }
+
+    function renderObjectDropdownItems(list, objType) {
+      const dropdown = document.getElementById('object_dropdown_list');
+      if (!dropdown) return;
+      dropdown.innerHTML = '';
+      activeObjectIndex = -1;
+
+      if (list.length === 0) {
+        dropdown.innerHTML = '<div class="p-3 text-center text-gray-400 italic">Titik objek tidak ditemukan</div>';
+        return;
+      }
+
+      list.forEach((itemObj, idx) => {
+        const item = document.createElement('div');
+        item.className = 'p-2.5 hover:bg-theme5 hover:bg-opacity-40 cursor-pointer flex justify-between items-center transition object-opt-item';
+        item.dataset.index = idx;
+
+        if (objType === 'culvert') {
+          const prio = itemObj.priority ? `${itemObj.priority}` : '';
+          const prioBadge = prio ? `<span class="text-[9px] bg-rose-100 text-rose-700 font-bold px-1.5 py-0.5 rounded ml-1">${prio}</span>` : '';
+          item.innerHTML = `
+            <div class="flex flex-col">
+              <div class="flex items-center">
+                <span class="font-bold text-theme1">${itemObj.id}</span>
+                ${prioBadge}
+              </div>
+              <span class="text-[10px] text-gray-500 font-medium">${itemObj.location || 'Area'}</span>
+            </div>
+            <span class="text-[10px] bg-theme1 text-white font-mono px-1.5 py-0.5 rounded font-semibold">${itemObj.contractor}</span>
+          `;
+        } else {
+          item.innerHTML = `
+            <div class="flex flex-col">
+              <span class="font-bold text-theme1">${itemObj.id}</span>
+              <span class="text-[10px] text-gray-500 font-medium">${itemObj.contractor}</span>
+            </div>
+            <span class="text-[10px] bg-theme1 text-white font-mono px-1.5 py-0.5 rounded font-semibold">${itemObj.contractor}</span>
+          `;
+        }
+
+        item.onmousedown = (e) => {
+          e.preventDefault();
+          selectObjectOption(itemObj.id);
+        };
+        dropdown.appendChild(item);
+      });
+    }
+
+    function openObjectDropdown() {
+      const dropdown = document.getElementById('object_dropdown_list');
+      if (!dropdown) return;
+      const objType = document.getElementById('form_object_type')?.value || 'culvert';
+      const currentContractor = state.user ? state.user.contractor : 'Semua';
+      const query = (document.getElementById('form_object_input')?.value || '').toLowerCase().trim();
+
+      if (objType === 'culvert') {
+        const filtered = state.culverts.filter(c => {
+          if (currentContractor !== 'Semua' && c.contractor !== currentContractor) return false;
+          if (!query) return true;
+          return (c.id || '').toLowerCase().includes(query) || (c.location || '').toLowerCase().includes(query);
+        });
+        renderObjectDropdownItems(filtered, 'culvert');
+      } else {
+        const filtered = state.channels.filter(ch => {
+          if (currentContractor !== 'Semua' && ch.contractor !== currentContractor) return false;
+          if (!query) return true;
+          return (ch.id || '').toLowerCase().includes(query);
+        });
+        renderObjectDropdownItems(filtered, 'channel');
+      }
+
+      dropdown.classList.remove('hidden');
+      const caret = document.getElementById('object_caret');
+      if (caret) caret.classList.add('rotate-180');
+    }
+
+    function closeObjectDropdown() {
+      const dropdown = document.getElementById('object_dropdown_list');
+      if (dropdown) dropdown.classList.add('hidden');
+      const caret = document.getElementById('object_caret');
+      if (caret) caret.classList.remove('rotate-180');
+      activeObjectIndex = -1;
+    }
+
+    function toggleObjectDropdown() {
+      const dropdown = document.getElementById('object_dropdown_list');
+      if (dropdown && !dropdown.classList.contains('hidden')) {
+        closeObjectDropdown();
+      } else {
+        const input = document.getElementById('form_object_input');
+        if (input) input.focus();
+        openObjectDropdown();
+      }
+    }
+
+    function filterObjectOptions(query) {
+      openObjectDropdown();
+      const currentContractor = state.user ? state.user.contractor : 'Semua';
+      const cleanQuery = query.toLowerCase().trim();
+
+      const exactCulvert = state.culverts.find(c => {
+        if (currentContractor !== 'Semua' && c.contractor !== currentContractor) return false;
+        return (c.id || '').toLowerCase() === cleanQuery;
+      });
+      const exactChannel = state.channels.find(ch => {
+        if (currentContractor !== 'Semua' && ch.contractor !== currentContractor) return false;
+        return (ch.id || '').toLowerCase() === cleanQuery;
+      });
+
+      if (exactCulvert) {
+        autofillObjectDetails(exactCulvert.id);
+        const sel = document.getElementById('sheetObjectSelect');
+        if (sel) sel.value = exactCulvert.id;
+      } else if (exactChannel) {
+        autofillObjectDetails(exactChannel.id);
+        const sel = document.getElementById('sheetObjectSelect');
+        if (sel) sel.value = exactChannel.id;
+      } else if (!cleanQuery) {
+        autofillObjectDetails('');
+        const sel = document.getElementById('sheetObjectSelect');
+        if (sel) sel.value = '';
+      }
+    }
+
+    function selectObjectOption(id) {
+      const input = document.getElementById('form_object_input');
+      const select = document.getElementById('sheetObjectSelect');
+      if (input) input.value = id;
+      if (select) select.value = id;
+      autofillObjectDetails(id);
+      closeObjectDropdown();
+    }
+
+    function handleObjectKeydown(e) {
+      const dropdown = document.getElementById('object_dropdown_list');
+      if (!dropdown || dropdown.classList.contains('hidden')) {
+        if (e.key === 'ArrowDown' || e.key === 'Enter') {
+          openObjectDropdown();
+          e.preventDefault();
+        }
+        return;
+      }
+
+      const items = dropdown.querySelectorAll('.object-opt-item');
+      if (items.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeObjectIndex = (activeObjectIndex + 1) % items.length;
+        updateActiveDropdownHighlight(items, activeObjectIndex);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeObjectIndex = (activeObjectIndex - 1 + items.length) % items.length;
+        updateActiveDropdownHighlight(items, activeObjectIndex);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeObjectIndex >= 0 && activeObjectIndex < items.length) {
+          items[activeObjectIndex].dispatchEvent(new MouseEvent('mousedown'));
+        } else if (items.length > 0) {
+          items[0].dispatchEvent(new MouseEvent('mousedown'));
+        }
+      } else if (e.key === 'Escape' || e.key === 'Tab') {
+        closeObjectDropdown();
+      }
+    }
+
+    function updateActiveDropdownHighlight(items, activeIndex) {
+      items.forEach((item, idx) => {
+        if (idx === activeIndex) {
+          item.classList.add('bg-theme5', 'bg-opacity-60', 'border-l-4', 'border-theme3');
+          item.scrollIntoView({ block: 'nearest' });
+        } else {
+          item.classList.remove('bg-theme5', 'bg-opacity-60', 'border-l-4', 'border-theme3');
+        }
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      const insWrapper = document.getElementById('inspector_search_wrapper');
+      if (insWrapper && !insWrapper.contains(e.target)) {
+        closeInspectorDropdown();
+      }
+      const objWrapper = document.getElementById('object_search_wrapper');
+      if (objWrapper && !objWrapper.contains(e.target)) {
+        closeObjectDropdown();
+      }
+    });
 
     function autofillObjectDetails(val) {
       const latInput = document.getElementById('form_latitude');
@@ -1501,9 +1860,9 @@
         return;
       }
 
-      const cleanId = val.split('_')[0];
-      const culvert = state.culverts.find(c => c.id === cleanId);
-      if (culvert) {
+      const cleanId = val.split('_')[0].trim().toUpperCase();
+      const culvert = state.culverts.find(c => (c.id || '').trim().toUpperCase() === cleanId);
+      if (culvert && culvert.coordinates) {
         latInput.value = culvert.coordinates[0];
         lngInput.value = culvert.coordinates[1];
       } else {
@@ -1544,8 +1903,8 @@
     async function handleFormSubmit(e) {
       e.preventDefault();
 
-      const selectedInspect = document.getElementById('form_inspector_select').value;
-      const selectedAssetId = document.getElementById('sheetObjectSelect').value;
+      const selectedInspect = (document.getElementById('form_inspector_input')?.value || document.getElementById('form_inspector_select')?.value || '').trim();
+      const selectedAssetId = (document.getElementById('form_object_input')?.value || document.getElementById('sheetObjectSelect')?.value || '').trim();
       const objType = document.getElementById('form_object_type').value;
 
       if (!selectedInspect || !selectedAssetId) {
@@ -1563,8 +1922,8 @@
       const latitudeValue = document.getElementById('form_latitude').value;
       const longitudeValue = document.getElementById('form_longitude').value;
 
-      const cleanId = selectedAssetId.split('_')[0];
-      const sourceCulvert = state.culverts.find(c => c.id === cleanId);
+      const cleanId = selectedAssetId.split('_')[0].trim().toUpperCase();
+      const sourceCulvert = state.culverts.find(c => (c.id || '').trim().toUpperCase() === cleanId);
       const currentRole = state.user ? state.user.contractor : 'BUMA';
       const mitraType = state.user ? state.user.mitraType : 'mining';
 
@@ -1655,6 +2014,22 @@
       const localCompliance = calculateComplianceScore(payload.data, mitraType, objType);
       const isOnline = navigator.onLine;
 
+      const resetInspectionInputs = () => {
+        document.getElementById('inspectionForm').reset();
+        const insInput = document.getElementById('form_inspector_input');
+        if (insInput) insInput.value = '';
+        const objInput = document.getElementById('form_object_input');
+        if (objInput) objInput.value = '';
+        const latInput = document.getElementById('form_latitude');
+        if (latInput) latInput.value = '';
+        const lngInput = document.getElementById('form_longitude');
+        if (lngInput) lngInput.value = '';
+        const nrpInput = document.getElementById('form_nrp');
+        if (nrpInput) nrpInput.value = '';
+        prefillCurrentDateTime();
+        syncOfflineBanners();
+      };
+
       if (!isOnline) {
         state.offlineInspections.push(payload);
 
@@ -1690,9 +2065,7 @@
           confirmButtonText: 'OK'
         });
 
-        document.getElementById('inspectionForm').reset();
-        prefillCurrentDateTime();
-        syncOfflineBanners();
+        resetInspectionInputs();
         switchTab('dashboard');
       } else {
         try {
@@ -1719,9 +2092,7 @@
             showConfirmButton: false
           });
 
-          document.getElementById('inspectionForm').reset();
-          prefillCurrentDateTime();
-          syncOfflineBanners();
+          resetInspectionInputs();
           switchTab('dashboard');
         } catch (error) {
           console.warn("Jaringan bermasalah. Menyimpan ke daftar tunggu offline.", error);
@@ -1753,9 +2124,7 @@
 
           Swal.fire('Data Disimpan Lokal', 'Data berhasil tersimpan offline, silakan sinkronkan saat ada jaringan.', 'info');
 
-          document.getElementById('inspectionForm').reset();
-          prefillCurrentDateTime();
-          syncOfflineBanners();
+          resetInspectionInputs();
           switchTab('dashboard');
         }
       }
@@ -2981,12 +3350,12 @@
       if (typeSel) typeSel.value = type;
       filterAssetDropdown(type);
 
+      const input = document.getElementById('form_object_input');
+      if (input) input.value = id;
       const select = document.getElementById('sheetObjectSelect');
-      if (select) {
-        select.value = id;
-        autofillObjectDetails(id);
-      }
+      if (select) select.value = id;
 
+      autofillObjectDetails(id);
       switchTab('survey');
     }
 
@@ -3192,14 +3561,57 @@
     }
 
     function switchTab(tabId) {
+      if (tabId === 'admin') {
+        const isAdminAuth = sessionStorage.getItem('clv_admin_authenticated');
+        if (!isAdminAuth) {
+          Swal.fire({
+            title: 'Masuk Halaman Admin',
+            text: 'Masukkan Password Khusus Admin:',
+            input: 'password',
+            inputPlaceholder: 'Masukkan password...',
+            inputAttributes: {
+              autocapitalize: 'off',
+              autocorrect: 'off'
+            },
+            showCancelButton: true,
+            confirmButtonColor: '#1B4332',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Buka Admin',
+            cancelButtonText: 'Batal',
+            preConfirm: (pass) => {
+              if (pass !== '8080') {
+                Swal.showValidationMessage('Password admin salah!');
+                return false;
+              }
+              return true;
+            }
+          }).then((result) => {
+            if (result.isConfirmed) {
+              sessionStorage.setItem('clv_admin_authenticated', 'true');
+              proceedSwitchTab('admin');
+            }
+          });
+          return;
+        }
+      }
+      proceedSwitchTab(tabId);
+    }
+
+    function proceedSwitchTab(tabId) {
       state.activeTab = tabId;
+      localStorage.setItem('clv_active_tab', tabId);
 
       document.querySelectorAll('.tab-section').forEach(el => el.classList.add('hidden'));
-      document.getElementById(`section-${tabId}`).classList.remove('hidden');
+      const targetSec = document.getElementById(`section-${tabId}`);
+      if (targetSec) targetSec.classList.remove('hidden');
 
       document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('nav-active'));
       const activeDeskBtn = document.getElementById(`desk-tab-${tabId}`);
       if (activeDeskBtn) activeDeskBtn.classList.add('nav-active');
+
+      document.querySelectorAll('#mobile-menu button').forEach(btn => btn.classList.remove('mobile-nav-active'));
+      const activeMobBtn = document.getElementById(`mob-tab-${tabId}`);
+      if (activeMobBtn) activeMobBtn.classList.add('mobile-nav-active');
 
       if (tabId === 'dashboard') {
         renderDashboard();
@@ -3236,30 +3648,41 @@
         if (remChk) remChk.checked = true;
       }
 
-      // Restore active user session on page refresh (prevents auto logout)
+      // Restore active user session on page refresh (prevents auto logout & stays on previous tab)
       const savedSession = JSON.parse(localStorage.getItem('clv_user_session'));
       if (savedSession) {
         state.user = savedSession;
         applyUserSession(savedSession);
 
-        Swal.fire({
-          title: 'Mempersiapkan Sistem',
-          allowOutsideClick: false,
-          didOpen: () => { Swal.showLoading(); }
-        });
-
-        await loadSheetsAPIData();
-        await loadLiveInspections();
-
-        Swal.close();
-
+        // Immediate render using local cache (instant responsiveness, no blocking modal)
         renderDatalists();
         const objectTypeSelect = document.getElementById('form_object_type');
         if (objectTypeSelect) filterAssetDropdown(objectTypeSelect.value);
         prefillCurrentDateTime();
         syncOfflineBanners();
 
-        switchTab('home');
+        // Stay on previous active tab
+        const savedTab = localStorage.getItem('clv_active_tab') || 'home';
+        if (savedTab === 'admin' && !sessionStorage.getItem('clv_admin_authenticated')) {
+          proceedSwitchTab('home');
+        } else {
+          proceedSwitchTab(savedTab);
+        }
+
+        // Silent background sync (fetches latest data if online without blocking the user)
+        if (navigator.onLine) {
+          Promise.all([loadSheetsAPIData(), loadLiveInspections()]).then(() => {
+            renderDatalists();
+            renderAdminTables();
+            const objTypeSelect = document.getElementById('form_object_type');
+            if (objTypeSelect) filterAssetDropdown(objTypeSelect.value);
+            if (state.activeTab === 'dashboard') renderDashboard();
+            if (state.activeTab === 'map') {
+              renderMapLegend();
+              renderMapMarkers();
+            }
+          }).catch(err => console.warn("Background sync error:", err));
+        }
       }
     };
   </script>
