@@ -1043,7 +1043,9 @@
     }
 
     function getCulvertPriority(id) {
-      const match = state.culverts.find(c => c.id === id);
+      if (!id) return '-';
+      const clean = String(id).trim().toUpperCase();
+      const match = state.culverts.find(c => String(c.id).trim().toUpperCase() === clean);
       if (match && match.priority) {
         const p = match.priority.toString().trim().toLowerCase();
         if (p === '1' || p === 'prioritas 1') return 'Prioritas 1';
@@ -1054,7 +1056,9 @@
     }
 
     function getCulvertLineCount(id) {
-      const match = state.culverts.find(c => c.id === id);
+      if (!id) return '-';
+      const clean = String(id).trim().toUpperCase();
+      const match = state.culverts.find(c => String(c.id).trim().toUpperCase() === clean);
       if (!match || match.jml_line === undefined || match.jml_line === null || match.jml_line === '') {
         return '-';
       }
@@ -1860,7 +1864,7 @@
         return;
       }
 
-      const cleanId = val.split('_')[0].trim().toUpperCase();
+      const cleanId = String(val).trim().toUpperCase();
       const culvert = state.culverts.find(c => (c.id || '').trim().toUpperCase() === cleanId);
       if (culvert && culvert.coordinates) {
         latInput.value = culvert.coordinates[0];
@@ -1922,7 +1926,7 @@
       const latitudeValue = document.getElementById('form_latitude').value;
       const longitudeValue = document.getElementById('form_longitude').value;
 
-      const cleanId = selectedAssetId.split('_')[0].trim().toUpperCase();
+      const cleanId = String(selectedAssetId).trim().toUpperCase();
       const sourceCulvert = state.culverts.find(c => (c.id || '').trim().toUpperCase() === cleanId);
       const currentRole = state.user ? state.user.contractor : 'BUMA';
       const mitraType = state.user ? state.user.mitraType : 'mining';
@@ -3343,7 +3347,7 @@
     }
 
     function quickActionInspect(id) {
-      const isCulvert = state.culverts.find(c => c.id === id);
+      const isCulvert = state.culverts.find(c => String(c.id).trim().toUpperCase() === String(id).trim().toUpperCase());
       const type = isCulvert ? 'culvert' : 'channel';
 
       const typeSel = document.getElementById('form_object_type');
@@ -3687,4 +3691,5 @@
     };
   </script>
 </body>
+
 </html>
