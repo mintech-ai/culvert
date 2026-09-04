@@ -357,7 +357,7 @@
                 <label class="block font-semibold mb-1">Box Control sebelum inlet</label>
                 <select id="ews_c_box"
                   class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-theme2 bg-white">
-                  <option value="1">Tidak Ada</option>
+                  <option value="0.25">Tidak Ada</option>
                   <option value="0">Ada</option>
                 </select>
               </div>
@@ -1013,7 +1013,7 @@
             payloadData.culvertIfrasParkir, payloadData.culvertIfrasVisible, payloadData.culvertIfrasAccess, payloadData.culvertIfrasRambu
           ];
         } else {
-          indicators = [payloadData.channelKendaliErosi];
+          indicators = [payloadData.channelKendaliErosi !== undefined ? payloadData.channelKendaliErosi : payloadData.channelPenahanErosi];
         }
       }
 
@@ -1955,9 +1955,9 @@
 
       const dummySedimentForEws = objType === 'culvert' ? parseFloat(culvertSedimentVal || 0.25) : parseFloat(channelSedimentVal || 0.25);
       const dummyStructureForEws = objType === 'culvert' ? parseInt(culvertStructureVal || 0) : 0;
-      const dummyBoxForEws = objType === 'culvert' ? parseInt(culvertBoxControlVal || 0) : 0;
+      const dummyBoxForEws = objType === 'culvert' ? parseFloat(culvertBoxControlVal || 0) : 0;
 
-      const numericEWSLocal = (dummySedimentForEws * 4) + (dummyStructureForEws * 3) + (dummyBoxForEws === 0 ? 1 : 0);
+      const numericEWSLocal = (dummySedimentForEws * 4) + (dummyStructureForEws * 3) + dummyBoxForEws;
       let localStatusEws = 'Low';
       const normScore = numericEWSLocal / 3;
       if (normScore >= 0.75) localStatusEws = 'Critical';
@@ -2008,11 +2008,18 @@
       };
 
       complianceRadios.forEach(rad => {
-        if (rad.name === 'culvertPenyok' || rad.name === 'culvertKeropos') {
-          payload.data[rad.name] = rad.value === 'Tidak' ? '1' : '0';
-        } else {
-          payload.data[rad.name] = rad.value === 'Ada' ? '1' : '0';
-        }
+        const isInverse = [
+          'culvertPenyok',
+          'culvertKeropos',
+          'channelKendaliErosi',
+          'channelPenahanErosi'
+        ].includes(rad.name);
+
+        const val = isInverse ? (rad.value === 'Tidak' || rad.value === 'Tidak Ada' ? '1' : '0') : (rad.value === 'Ada' ? '1' : '0');
+        payload.data[rad.name] = val;
+
+        if (rad.name === 'channelKendaliErosi') payload.data['channelPenahanErosi'] = val;
+        if (rad.name === 'channelPenahanErosi') payload.data['channelKendaliErosi'] = val;
       });
 
       const localCompliance = calculateComplianceScore(payload.data, mitraType, objType);
