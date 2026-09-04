@@ -3323,12 +3323,34 @@
       });
     }
 
+    function getDirectImageUrl(url) {
+      if (!url || typeof url !== 'string') return '';
+      const cleanUrl = url.trim();
+
+      // Khusus data lama dari Google Drive
+      if (cleanUrl.includes('drive.google.com') || cleanUrl.includes('drive.usercontent.google.com')) {
+        const match = cleanUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || cleanUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          return `https://lh3.googleusercontent.com/d/${match[1]}`;
+        }
+      }
+
+      // Link Dropbox, Base64, atau URL lainnya tetap utuh apa adanya
+      return cleanUrl;
+    }
+
     function viewMediaMockup(url) {
+      if (!url) return;
+      const directUrl = getDirectImageUrl(url);
+
       Swal.fire({
         title: 'Pratinjau Foto Laporan',
-        imageUrl: url,
+        imageUrl: directUrl,
         imageAlt: 'Foto Lapangan',
-        confirmButtonColor: '#1B4332'
+        imageWidth: 500,
+        confirmButtonColor: '#1B4332',
+        confirmButtonText: 'Tutup',
+        footer: `<a href="${url}" target="_blank" class="text-blue-600 hover:underline text-xs flex items-center justify-center gap-1 font-semibold"><i class="ph ph-arrow-square-out"></i> Buka Link Asli di Tab Baru</a>`
       });
     }
 
