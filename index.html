@@ -3437,10 +3437,11 @@
         let markerColor = '#9ca3af';
 
         if (activeIndicator === 'risk') {
-          if (risk === 'Low') markerColor = '#10b981';
-          else if (risk === 'Medium') markerColor = '#f59e0b';
-          else if (risk === 'High') markerColor = '#ea580c';
-          else if (risk === 'Critical') markerColor = '#a855f7';
+          if (risk === 'Low') markerColor = '#22c55e';
+          else if (risk === 'Medium') markerColor = '#eab308';
+          else if (risk === 'High') markerColor = '#f97316';
+          else if (risk === 'Critical') markerColor = '#ef4444';
+          else markerColor = '#9ca3af';
         } else if (activeIndicator === 'time') {
           if (timeCategory === 'Hari Ini') markerColor = '#3b82f6';
           else if (timeCategory === '< 7 Hari') markerColor = '#22c55e';
@@ -3506,10 +3507,10 @@
 
       if (ind === 'risk') {
         html += `
-          <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Low</div>
-          <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Medium</div>
+          <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-green-500"></span> Low</div>
+          <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-yellow-500"></span> Medium</div>
           <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-orange-500"></span> High</div>
-          <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-purple-600"></span> Critical</div>
+          <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-red-500"></span> Critical</div>
           <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-gray-400"></span> Belum Ada Data</div>
         `;
       } else if (ind === 'time') {
