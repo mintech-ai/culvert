@@ -420,47 +420,81 @@
 
     <!-- 3. DASHBOARD SECTION -->
     <section id="section-dashboard" class="tab-section hidden">
-      <div class="mb-4 flex flex-col md:flex-row md:justify-between md:items-end">
-        <h2 class="text-lg font-bold text-theme1 border-l-4 border-theme3 pl-3">Dashboard Culvert Inspection</h2>
+      <div class="mb-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+        <div>
+          <h2 class="text-lg font-bold text-theme1 border-l-4 border-theme3 pl-3" id="dashboardTitle">Dashboard Culvert Inspection</h2>
+          <p class="text-xs text-gray-500 pl-3 mt-0.5" id="dashboardSubtitle">Menampilkan data inspeksi terakhir per titik objek</p>
+        </div>
+        <!-- Segmented Switch: Culvert vs Channel -->
+        <div class="inline-flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-inner">
+          <button id="btnDashCulvert" onclick="setDashboardAssetType('culvert')" class="px-4 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1.5 bg-theme1 text-white shadow-sm">
+            <i class="ph ph-cube"></i> Culvert (Gorong-gorong)
+          </button>
+          <button id="btnDashChannel" onclick="setDashboardAssetType('channel')" class="px-4 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1.5 text-gray-600 hover:text-theme1 bg-transparent">
+            <i class="ph ph-git-commit"></i> Channel (Saluran Air)
+          </button>
+        </div>
       </div>
 
       <!-- Info Cards -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <div onclick="toggleTotalCulvertClick()"
+        <div onclick="toggleTotalCulvertClick()" id="cardTotalContainer"
           class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-theme1 hover:bg-theme5 hover:bg-opacity-40 cursor-pointer transition shadow-sm hover:scale-[1.01] group">
-          <h3 class="text-[10px] text-gray-500 font-bold uppercase flex items-center gap-1">
+          <h3 class="text-[10px] text-gray-500 font-bold uppercase flex items-center gap-1" id="cardTotalTitle">
             <i class="ph ph-cube text-theme2 group-hover:animate-bounce"></i> Total Culvert
           </h3>
           <p class="text-2xl font-bold font-mono" id="cardTotal">0</p>
-          <span class="text-[9px] text-theme3 font-semibold underline block mt-1">Klik untuk directory lengkap</span>
+          <span class="text-[9px] text-theme3 font-semibold underline block mt-1" id="cardTotalSub">Klik untuk directory lengkap</span>
         </div>
 
-        <div class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-purple-700">
-          <h3 class="text-[10px] text-gray-500 font-bold uppercase">Critical Risk</h3>
-          <p class="text-2xl font-bold font-mono text-purple-700" id="cardCritical">0</p>
+        <div onclick="filterDashboardByRisk('Critical')"
+          class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-red-600 hover:bg-red-50 hover:bg-opacity-40 cursor-pointer transition shadow-sm hover:scale-[1.01] group" title="Klik untuk filter Critical di tabel">
+          <h3 class="text-[10px] text-red-600 font-bold uppercase flex items-center justify-between">
+            <span>Critical Risk</span>
+            <i class="ph ph-warning-circle text-xs group-hover:animate-bounce"></i>
+          </h3>
+          <p class="text-2xl font-bold font-mono text-red-600" id="cardCritical">0</p>
+          <span class="text-[9px] text-red-500 font-semibold underline block mt-1">Klik untuk filter tabel</span>
         </div>
-        <div class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-red-600">
-          <h3 class="text-[10px] text-gray-500 font-bold uppercase">> 30 Hari Belum diinspeksi</h3>
-          <p class="text-2xl font-bold font-mono text-red-600" id="cardOverdue">0</p>
+        <div onclick="filterDashboardByTime('> 30 Hari')"
+          class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-orange-500 hover:bg-orange-50 hover:bg-opacity-40 cursor-pointer transition shadow-sm hover:scale-[1.01] group" title="Klik untuk filter > 30 Hari di tabel">
+          <h3 class="text-[10px] text-gray-500 font-bold uppercase flex items-center justify-between">
+            <span>> 30 Hari Belum diinspeksi</span>
+            <i class="ph ph-clock-countdown text-xs group-hover:animate-bounce"></i>
+          </h3>
+          <p class="text-2xl font-bold font-mono text-orange-500" id="cardOverdue">0</p>
+          <span class="text-[9px] text-orange-500 font-semibold underline block mt-1">Klik untuk filter tabel</span>
         </div>
-        <div class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-rose-600">
-          <h3 class="text-[10px] text-gray-500 font-bold uppercase">Prioritas 1</h3>
-          <p class="text-2xl font-bold font-mono text-rose-600" id="cardPrio1">0</p>
+        <div class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-emerald-600" id="cardPrio1Container">
+          <h3 class="text-[10px] text-gray-500 font-bold uppercase flex items-center gap-1" id="cardPrio1Title">
+            <i class="ph ph-check-circle text-emerald-600"></i> Titik Diinspeksi
+          </h3>
+          <p class="text-2xl font-bold font-mono text-emerald-600" id="cardPrio1">0</p>
+          <span class="text-[9px] text-emerald-600 font-semibold block mt-1">Sudah Diinspeksi</span>
         </div>
       </div>
 
       <!-- Charts Grid -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
         <div class="bg-white rounded border border-gray-100 p-3">
-          <h3 class="text-xs font-bold text-center mb-2 text-theme1">Tingkat Risiko</h3>
+          <h3 class="text-xs font-bold text-center mb-2 text-theme1 flex items-center justify-center gap-1">
+            <i class="ph ph-chart-donut text-theme3"></i> Tingkat Risiko
+            <span class="text-[10px] text-gray-400 font-normal">(Klik untuk filter)</span>
+          </h3>
           <div class="h-40 relative"><canvas id="riskChart"></canvas></div>
         </div>
         <div class="bg-white rounded border border-gray-100 p-3">
-          <h3 class="text-xs font-bold text-center mb-2 text-theme1">Waktu Terakhir Inspeksi</h3>
+          <h3 class="text-xs font-bold text-center mb-2 text-theme1 flex items-center justify-center gap-1">
+            <i class="ph ph-clock text-theme3"></i> Waktu Terakhir Inspeksi
+            <span class="text-[10px] text-gray-400 font-normal">(Klik untuk filter)</span>
+          </h3>
           <div class="h-40 relative"><canvas id="timeChart"></canvas></div>
         </div>
-        <div class="bg-white rounded border border-gray-100 p-3">
-          <h3 class="text-xs font-bold text-center mb-2 text-theme1">Prioritas</h3>
+        <div class="bg-white rounded border border-gray-100 p-3" id="prioChartCard">
+          <h3 class="text-xs font-bold text-center mb-2 text-theme1 flex items-center justify-center gap-1" id="prioChartTitle">
+            <i class="ph ph-flag text-theme3"></i> Prioritas Culvert
+            <span class="text-[10px] text-gray-400 font-normal">(Klik untuk filter)</span>
+          </h3>
           <div class="h-40 relative"><canvas id="prioChart"></canvas></div>
         </div>
       </div>
@@ -920,10 +954,46 @@
           lastCheckCategory: "> 30 Hari",
           priority: "",
           lineCount: "",
-          fileInlet: "https://placehold.co/600x400/a855f7/ffffff?text=Inlet+CV-PIT-04",
-          fileOutlet: "https://placehold.co/600x400/a855f7/ffffff?text=Outlet+CV-PIT-04",
+          fileInlet: "https://placehold.co/600x400/ef4444/ffffff?text=Inlet+CV-PIT-04",
+          fileOutlet: "https://placehold.co/600x400/ef4444/ffffff?text=Outlet+CV-PIT-04",
           fileOther: "",
           compliance: 50
+        },
+        {
+          id: "CHN-20260621110000",
+          idCulvert: "CH-PIT-01",
+          inspector: "Budi Setiawan",
+          contractor: "BUMA",
+          date: "2026-06-21 11:00:00",
+          weather: "Cerah",
+          participants: "Hendra",
+          type: "channel",
+          riskLevel: "Critical",
+          lastCheckCategory: "Hari Ini",
+          priority: "",
+          lineCount: "",
+          fileInlet: "",
+          fileOutlet: "",
+          fileOther: "",
+          compliance: 60
+        },
+        {
+          id: "CHN-20260620090000",
+          idCulvert: "CH-PIT-02",
+          inspector: "Andi Saputra",
+          contractor: "SIS",
+          date: "2026-06-20 09:00:00",
+          weather: "Cerah",
+          participants: "",
+          type: "channel",
+          riskLevel: "Low",
+          lastCheckCategory: "Hari Ini",
+          priority: "",
+          lineCount: "",
+          fileInlet: "",
+          fileOutlet: "",
+          fileOther: "",
+          compliance: 90
         }
       ],
       offlineInspections: JSON.parse(localStorage.getItem('clv_offline_inspections')) || [],
@@ -932,6 +1002,7 @@
       mapFilterIndicator: 'risk',
       charts: {},
 
+      dashboardAssetType: 'culvert',
       dashboardViewMode: 'general',
       selectedCulvertHistoryId: null,
       masterFilters: {
@@ -1079,15 +1150,24 @@
       return true;
     }
 
+    function parseDateSafe(dateStr) {
+      if (!dateStr || dateStr === '-') return 0;
+      const clean = String(dateStr).trim().replace(' ', 'T');
+      const t = new Date(clean).getTime();
+      return isNaN(t) ? 0 : t;
+    }
+
     function getLatestInspectionsOnly(inspectionsList) {
-      const sorted = [...inspectionsList].sort((a, b) => new Date(a.date) - new Date(b.date));
+      if (!Array.isArray(inspectionsList)) return [];
+      const sorted = [...inspectionsList].sort((a, b) => parseDateSafe(a.date) - parseDateSafe(b.date));
       const latestMap = {};
       sorted.forEach(ins => {
-        if (ins.idCulvert) {
-          latestMap[ins.idCulvert] = ins;
+        const idKey = String(ins.idCulvert || ins.id || '').trim();
+        if (idKey) {
+          latestMap[idKey] = ins;
         }
       });
-      return Object.values(latestMap).sort((a, b) => new Date(b.date) - new Date(a.date));
+      return Object.values(latestMap).sort((a, b) => parseDateSafe(b.date) - parseDateSafe(a.date));
     }
 
     async function loadSheetsAPIData() {
@@ -2233,25 +2313,70 @@
       });
     }
 
+    function isChannelInspection(ins) {
+      if (!ins) return false;
+      if (ins.type === 'channel') return true;
+      if (ins.type === 'culvert') return false;
+      const id = String(ins.idCulvert || ins.id || '').toUpperCase().trim();
+      if (id.startsWith('CH-') || id.startsWith('CHANNEL')) return true;
+      if (state.channels && state.channels.some(ch => String(ch.id).toUpperCase().trim() === id)) return true;
+      return false;
+    }
+
+    function getLatestInspectionsForActiveAsset(allContractors = false) {
+      const assetType = state.dashboardAssetType || 'culvert';
+      const loggedInContractor = state.user ? state.user.contractor : 'Semua';
+
+      // 1. Gather active IDs that currently exist in master sheet database
+      const validMasterIds = new Set();
+      if (assetType === 'channel') {
+        state.channels.forEach(ch => {
+          if (allContractors || loggedInContractor === 'Semua' || ch.contractor === loggedInContractor) {
+            validMasterIds.add(String(ch.id || '').trim().toUpperCase());
+          }
+        });
+      } else {
+        state.culverts.forEach(c => {
+          if (allContractors || loggedInContractor === 'Semua' || c.contractor === loggedInContractor) {
+            validMasterIds.add(String(c.id || '').trim().toUpperCase());
+          }
+        });
+      }
+
+      // 2. Filter inspections: must match asset type AND must exist in master database sheet (not deleted)
+      let list = state.inspections.filter(ins => {
+        const isChan = isChannelInspection(ins);
+        if (assetType === 'channel' && !isChan) return false;
+        if (assetType === 'culvert' && isChan) return false;
+
+        const assetId = String(ins.idCulvert || ins.id || '').trim().toUpperCase();
+        if (!validMasterIds.has(assetId)) return false;
+
+        return true;
+      });
+
+      // 3. Filter by contractor if applicable
+      if (!allContractors && loggedInContractor !== 'Semua') {
+        list = list.filter(ins => ins.contractor === loggedInContractor);
+      }
+
+      // 4. Keep ONLY the latest inspection per asset ID
+      return getLatestInspectionsOnly(list);
+    }
+
     function getFilteredInspections(allData = false) {
       const pFilter = document.getElementById('filter-prio') ? document.getElementById('filter-prio').value : (state.generalFilters?.prio || 'Semua');
       const wFilter = document.getElementById('filter-waktu') ? document.getElementById('filter-waktu').value : (state.generalFilters?.waktu || 'Semua');
       const rFilter = document.getElementById('filter-risiko') ? document.getElementById('filter-risiko').value : (state.generalFilters?.risiko || 'Semua');
-      const loggedInContractor = state.user ? state.user.contractor : 'Semua';
 
-      let baseList = state.inspections;
-      if (!allData) {
-        baseList = getLatestInspectionsOnly(state.inspections);
-      }
+      const baseList = getLatestInspectionsForActiveAsset();
 
       return baseList.filter(ins => {
-        if (loggedInContractor !== 'Semua' && ins.contractor !== loggedInContractor) {
-          return false;
-        }
         if (pFilter !== 'Semua') {
           const p = ins.priority ? ins.priority.toString().trim().toLowerCase() : '';
           if (pFilter === 'Prioritas 1' && p !== 'prioritas 1' && p !== '1') return false;
           if (pFilter === 'Prioritas 2' && p !== 'prioritas 2' && p !== '2') return false;
+          if (pFilter === 'Lainnya' && (p === 'prioritas 1' || p === '1' || p === 'prioritas 2' || p === '2')) return false;
         }
         if (wFilter !== 'Semua' && ins.lastCheckCategory !== wFilter) return false;
         if (rFilter !== 'Semua' && ins.riskLevel !== rFilter) return false;
@@ -2261,8 +2386,80 @@
 
     function resetDashboardFilters() {
       state.generalFilters = { prio: 'Semua', waktu: 'Semua', risiko: 'Semua' };
+      renderDashboardTable();
+    }
+
+    function setDashboardAssetType(type) {
+      state.dashboardAssetType = type;
+      state.generalFilters = { prio: 'Semua', waktu: 'Semua', risiko: 'Semua' };
+      state.dashboardViewMode = 'general';
       renderDashboard();
     }
+
+    function filterDashboardByRisk(label) {
+      state.dashboardViewMode = 'general';
+
+      if (state.generalFilters.risiko === label) {
+        state.generalFilters.risiko = 'Semua';
+      } else {
+        state.generalFilters.risiko = label;
+      }
+
+      const filterRisikoEl = document.getElementById('filter-risiko');
+      if (filterRisikoEl) filterRisikoEl.value = state.generalFilters.risiko;
+
+      renderDashboardTable();
+
+      const tableEl = document.getElementById('dashboardTableContainer');
+      if (tableEl) {
+        tableEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function filterDashboardByTime(category) {
+      state.dashboardViewMode = 'general';
+
+      if (state.generalFilters.waktu === category) {
+        state.generalFilters.waktu = 'Semua';
+      } else {
+        state.generalFilters.waktu = category;
+      }
+
+      const filterWaktuEl = document.getElementById('filter-waktu');
+      if (filterWaktuEl) filterWaktuEl.value = state.generalFilters.waktu;
+
+      renderDashboardTable();
+
+      const tableEl = document.getElementById('dashboardTableContainer');
+      if (tableEl) {
+        tableEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function filterDashboardByPrio(priority) {
+      state.dashboardViewMode = 'general';
+
+      if (state.generalFilters.prio === priority) {
+        state.generalFilters.prio = 'Semua';
+      } else {
+        state.generalFilters.prio = priority;
+      }
+
+      const filterPrioEl = document.getElementById('filter-prio');
+      if (filterPrioEl) filterPrioEl.value = state.generalFilters.prio;
+
+      renderDashboardTable();
+
+      const tableEl = document.getElementById('dashboardTableContainer');
+      if (tableEl) {
+        tableEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    window.setDashboardAssetType = setDashboardAssetType;
+    window.filterDashboardByRisk = filterDashboardByRisk;
+    window.filterDashboardByTime = filterDashboardByTime;
+    window.filterDashboardByPrio = filterDashboardByPrio;
 
     function toggleTotalCulvertClick() {
       setDashboardViewMode('culvert_list');
@@ -2285,111 +2482,222 @@
     }
 
     function renderDashboard() {
-      const records = getFilteredInspections();
+      const assetType = state.dashboardAssetType || 'culvert';
+      const isCulvert = assetType === 'culvert';
 
-      document.getElementById('cardTotal').innerText = state.culverts.filter(c => state.user.contractor === 'Semua' || c.contractor === state.user.contractor).length;
-      document.getElementById('cardCritical').innerText = records.filter(i => i.riskLevel === 'Critical').length;
-      document.getElementById('cardOverdue').innerText = records.filter(i => i.lastCheckCategory === '> 30 Hari').length;
+      // Update toggle buttons UI
+      const btnCulvert = document.getElementById('btnDashCulvert');
+      const btnChannel = document.getElementById('btnDashChannel');
+      if (btnCulvert && btnChannel) {
+        if (isCulvert) {
+          btnCulvert.className = "px-4 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1.5 bg-theme1 text-white shadow-sm";
+          btnChannel.className = "px-4 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1.5 text-gray-600 hover:text-theme1 bg-transparent";
+        } else {
+          btnCulvert.className = "px-4 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1.5 text-gray-600 hover:text-theme1 bg-transparent";
+          btnChannel.className = "px-4 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1.5 bg-theme1 text-white shadow-sm";
+        }
+      }
 
-      document.getElementById('cardPrio1').innerText = records.filter(i => {
-        if (!i.priority) return false;
-        const p = i.priority.toString().trim().toLowerCase();
-        return p === '1' || p === 'prioritas 1';
-      }).length;
+      const titleEl = document.getElementById('dashboardTitle');
+      if (titleEl) {
+        titleEl.innerText = isCulvert ? "Dashboard Culvert Inspection" : "Dashboard Channel Inspection";
+      }
+      const subtitleEl = document.getElementById('dashboardSubtitle');
+      if (subtitleEl) {
+        subtitleEl.innerText = isCulvert 
+          ? "Menampilkan data inspeksi terakhir per titik Gorong-gorong (Culvert)" 
+          : "Menampilkan data inspeksi terakhir per titik Saluran Air (Channel)";
+      }
 
+      // Latest inspections for current asset type
+      const records = getLatestInspectionsForActiveAsset();
+
+      // Card 1: Total assets
+      const userContractor = state.user ? state.user.contractor : 'Semua';
+      const cardTotalTitle = document.getElementById('cardTotalTitle');
+      const cardTotalSub = document.getElementById('cardTotalSub');
+      const cardTotalEl = document.getElementById('cardTotal');
+      if (isCulvert) {
+        if (cardTotalTitle) cardTotalTitle.innerHTML = `<i class="ph ph-cube text-theme2 group-hover:animate-bounce"></i> Total Culvert`;
+        if (cardTotalSub) cardTotalSub.innerText = `Klik untuk directory lengkap`;
+        if (cardTotalEl) cardTotalEl.innerText = state.culverts.filter(c => userContractor === 'Semua' || c.contractor === userContractor).length;
+      } else {
+        if (cardTotalTitle) cardTotalTitle.innerHTML = `<i class="ph ph-git-commit text-theme2 group-hover:animate-bounce"></i> Total Channel`;
+        if (cardTotalSub) cardTotalSub.innerText = `Klik untuk directory lengkap`;
+        if (cardTotalEl) cardTotalEl.innerText = state.channels.filter(c => userContractor === 'Semua' || c.contractor === userContractor).length;
+      }
+
+      // Card 2: Critical Risk (Merah)
+      const cardCriticalEl = document.getElementById('cardCritical');
+      if (cardCriticalEl) cardCriticalEl.innerText = records.filter(i => i.riskLevel === 'Critical').length;
+
+      // Card 3: > 30 Hari (Overdue)
+      const cardOverdueEl = document.getElementById('cardOverdue');
+      if (cardOverdueEl) cardOverdueEl.innerText = records.filter(i => i.lastCheckCategory === '> 30 Hari').length;
+
+      // Card 4: Titik Diinspeksi (Culvert & Channel)
+      const cardPrio1Title = document.getElementById('cardPrio1Title');
+      const cardPrio1El = document.getElementById('cardPrio1');
+      if (cardPrio1Title) cardPrio1Title.innerHTML = `<i class="ph ph-check-circle text-emerald-600"></i> Titik Diinspeksi`;
+      if (cardPrio1El) cardPrio1El.innerText = records.length;
+
+      // Render Charts with latest records
       renderRiskChart(records);
       renderTimeChart(records);
       renderPrioChart(records);
 
+      // Render Table
       renderDashboardTable();
     }
 
     function filterDashboardTable() {
-      state.generalFilters.prio = document.getElementById('filter-prio').value;
-      state.generalFilters.waktu = document.getElementById('filter-waktu').value;
-      state.generalFilters.risiko = document.getElementById('filter-risiko').value;
+      const pEl = document.getElementById('filter-prio');
+      if (pEl) state.generalFilters.prio = pEl.value;
+      const wEl = document.getElementById('filter-waktu');
+      if (wEl) state.generalFilters.waktu = wEl.value;
+      const rEl = document.getElementById('filter-risiko');
+      if (rEl) state.generalFilters.risiko = rEl.value;
       renderDashboardTable();
     }
 
-    // REVISED CSV DOWNLOAD FOR MAIN DASHBOARD TABLE: Mitra, ID Culvert, Last Inspection, Risk Level, Complience Score, Jumlah line, Prioritas
+    // REVISED CSV DOWNLOAD FOR MAIN DASHBOARD TABLE: Adapts to active asset type (Culvert or Channel)
     function downloadDashboardExcel() {
+      const isCulvert = (state.dashboardAssetType || 'culvert') === 'culvert';
       const records = getFilteredInspections(false);
       let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "Mitra,ID Culvert,Last Inspection,Risk Level,Complience Score,Jumlah line,Prioritas\n";
 
-      records.forEach(rec => {
-        const lastInsp = rec.date ? rec.date.split(' ')[0] : '-';
-        const priorityVal = getCulvertPriority(rec.idCulvert);
-        const lineCountVal = getCulvertLineCount(rec.idCulvert);
-        const compVal = `${rec.compliance !== undefined ? rec.compliance : 0}%`;
+      if (isCulvert) {
+        csvContent += "Mitra,ID Culvert,Last Inspection,Risk Level,Complience Score,Jumlah line,Prioritas\n";
+        records.forEach(rec => {
+          const lastInsp = rec.date ? rec.date.split(' ')[0] : '-';
+          const priorityVal = getCulvertPriority(rec.idCulvert);
+          const lineCountVal = getCulvertLineCount(rec.idCulvert);
+          const compVal = `${rec.compliance !== undefined ? rec.compliance : 0}%`;
 
-        const row = [
-          `"${rec.contractor || '-'}"`,
-          `"${rec.idCulvert || '-'}"`,
-          `"${lastInsp}"`,
-          `"${rec.riskLevel || '-'}"`,
-          `"${compVal}"`,
-          `"${lineCountVal}"`,
-          `"${priorityVal}"`
-        ];
-        csvContent += row.join(",") + "\n";
-      });
+          const row = [
+            `"${rec.contractor || '-'}"`,
+            `"${rec.idCulvert || '-'}"`,
+            `"${lastInsp}"`,
+            `"${rec.riskLevel || '-'}"`,
+            `"${compVal}"`,
+            `"${lineCountVal}"`,
+            `"${priorityVal}"`
+          ];
+          csvContent += row.join(",") + "\n";
+        });
+      } else {
+        csvContent += "Mitra,ID Channel,Last Inspection,Risk Level,Complience Score\n";
+        records.forEach(rec => {
+          const lastInsp = rec.date ? rec.date.split(' ')[0] : '-';
+          const compVal = `${rec.compliance !== undefined ? rec.compliance : 0}%`;
+
+          const row = [
+            `"${rec.contractor || '-'}"`,
+            `"${rec.idCulvert || '-'}"`,
+            `"${lastInsp}"`,
+            `"${rec.riskLevel || '-'}"`,
+            `"${compVal}"`
+          ];
+          csvContent += row.join(",") + "\n";
+        });
+      }
 
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `Culvert_Dashboard_Summary_${new Date().toISOString().slice(0, 10)}.csv`);
+      const prefix = isCulvert ? 'Culvert' : 'Channel';
+      link.setAttribute("download", `${prefix}_Dashboard_Summary_${new Date().toISOString().slice(0, 10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
-    // REVISED CSV DOWNLOAD FOR DIRECTORY VIEW: Filtered by Year/Month, sorted by ID Culvert then Date
+    // REVISED CSV DOWNLOAD FOR DIRECTORY VIEW: Filtered by Year/Month, sorted by ID then Date
     function downloadDirectoryCSV() {
+      const isCulvert = (state.dashboardAssetType || 'culvert') === 'culvert';
       const selectedYear = state.masterFilters.year;
       const selectedMonth = state.masterFilters.month;
       const userContractor = state.user ? state.user.contractor : 'Semua';
 
-      // Get ALL inspections filtered by contractor & year/month
+      // Master IDs set: only include IDs that exist in the active master database sheet
+      const validMasterIds = new Set();
+      if (isCulvert) {
+        state.culverts.forEach(c => {
+          if (userContractor === 'Semua' || c.contractor === userContractor) {
+            validMasterIds.add(String(c.id || '').trim().toUpperCase());
+          }
+        });
+      } else {
+        state.channels.forEach(ch => {
+          if (userContractor === 'Semua' || ch.contractor === userContractor) {
+            validMasterIds.add(String(ch.id || '').trim().toUpperCase());
+          }
+        });
+      }
+
       let list = state.inspections.filter(ins => {
+        const isChan = isChannelInspection(ins);
+        if (isCulvert && isChan) return false;
+        if (!isCulvert && !isChan) return false;
+
+        const assetId = String(ins.idCulvert || ins.id || '').trim().toUpperCase();
+        if (!validMasterIds.has(assetId)) return false;
+
         if (userContractor !== 'Semua' && ins.contractor !== userContractor) return false;
         return matchYearAndMonth(ins.date, selectedYear, selectedMonth);
       });
 
-      // SORT BY ID CULVERT (A-Z) THEN DATE ASCENDING
+      // SORT BY ID (A-Z) THEN DATE ASCENDING
       list.sort((a, b) => {
         const idA = (a.idCulvert || '').toLowerCase();
         const idB = (b.idCulvert || '').toLowerCase();
         if (idA < idB) return -1;
         if (idA > idB) return 1;
-        return new Date(a.date) - new Date(b.date);
+        return parseDateSafe(a.date) - parseDateSafe(b.date);
       });
 
       let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "Mitra,ID Culvert,Tanggal Inspection,Risk Level,Complience Score,Jumlah line,Prioritas\n";
+      if (isCulvert) {
+        csvContent += "ID Culvert,Mitra,Tanggal Inspeksi,Risk Level,Compliance,Jumlah Line,Prioritas\n";
+        list.forEach(rec => {
+          const lastInsp = rec.date ? rec.date.split(' ')[0] : '-';
+          const priorityVal = getCulvertPriority(rec.idCulvert);
+          const lineCountVal = getCulvertLineCount(rec.idCulvert);
+          const compVal = `${rec.compliance !== undefined ? rec.compliance : 0}%`;
 
-      list.forEach(rec => {
-        const inspDate = rec.date ? rec.date.split(' ')[0] : '-';
-        const priorityVal = getCulvertPriority(rec.idCulvert);
-        const lineCountVal = getCulvertLineCount(rec.idCulvert);
-        const compVal = `${rec.compliance !== undefined ? rec.compliance : 0}%`;
+          const row = [
+            `"${rec.idCulvert || '-'}"`,
+            `"${rec.contractor || '-'}"`,
+            `"${lastInsp}"`,
+            `"${rec.riskLevel || '-'}"`,
+            `"${compVal}"`,
+            `"${lineCountVal}"`,
+            `"${priorityVal}"`
+          ];
+          csvContent += row.join(",") + "\n";
+        });
+      } else {
+        csvContent += "ID Channel,Mitra,Tanggal Inspeksi,Risk Level,Compliance\n";
+        list.forEach(rec => {
+          const lastInsp = rec.date ? rec.date.split(' ')[0] : '-';
+          const compVal = `${rec.compliance !== undefined ? rec.compliance : 0}%`;
 
-        const row = [
-          `"${rec.contractor || '-'}"`,
-          `"${rec.idCulvert || '-'}"`,
-          `"${inspDate}"`,
-          `"${rec.riskLevel || '-'}"`,
-          `"${compVal}"`,
-          `"${lineCountVal}"`,
-          `"${priorityVal}"`
-        ];
-        csvContent += row.join(",") + "\n";
-      });
+          const row = [
+            `"${rec.idCulvert || '-'}"`,
+            `"${rec.contractor || '-'}"`,
+            `"${lastInsp}"`,
+            `"${rec.riskLevel || '-'}"`,
+            `"${compVal}"`
+          ];
+          csvContent += row.join(",") + "\n";
+        });
+      }
 
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `Directory_Culvert_Export_${selectedYear}_${selectedMonth}.csv`);
+      const prefix = isCulvert ? 'Culvert' : 'Channel';
+      link.setAttribute("download", `${prefix}_Directory_${selectedYear}_${selectedMonth}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -2406,15 +2714,28 @@
       emptyDiv.classList.add('hidden');
 
       if (mode === 'general') {
+        const isCulvert = (state.dashboardAssetType || 'culvert') === 'culvert';
+        const activeRiskBadge = state.generalFilters.risiko !== 'Semua' 
+          ? `<span class="bg-theme1 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">Filter Risiko: ${state.generalFilters.risiko} <button onclick="filterDashboardByRisk('${state.generalFilters.risiko}')" class="text-white hover:text-red-200" title="Hapus Filter">&times;</button></span>`
+          : '';
+        const activeTimeBadge = state.generalFilters.waktu !== 'Semua'
+          ? `<span class="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">Filter Waktu: ${state.generalFilters.waktu} <button onclick="filterDashboardByTime('${state.generalFilters.waktu}')" class="text-white hover:text-blue-200" title="Hapus Filter">&times;</button></span>`
+          : '';
+        const activePrioBadge = isCulvert && state.generalFilters.prio !== 'Semua'
+          ? `<span class="bg-rose-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">Filter Prioritas: ${state.generalFilters.prio} <button onclick="filterDashboardByPrio('${state.generalFilters.prio}')" class="text-white hover:text-rose-200" title="Hapus Filter">&times;</button></span>`
+          : '';
+
         headerControls.innerHTML = `
           <div class="flex flex-wrap items-center gap-2 text-xs">
             <span class="text-gray-500 font-bold flex items-center gap-1"><i class="ph ph-funnel"></i> Filter:</span>
-            <select onchange="filterDashboardTable()" id="filter-prio" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none">
+            ${isCulvert ? `
+            <select onchange="filterDashboardTable()" id="filter-prio" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none text-[11px]">
               <option value="Semua">-- Semua Prioritas --</option>
               <option value="Prioritas 1">Prioritas 1</option>
               <option value="Prioritas 2">Prioritas 2</option>
-            </select>
-            <select onchange="filterDashboardTable()" id="filter-waktu" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none">
+              <option value="Lainnya">Lainnya</option>
+            </select>` : ''}
+            <select onchange="filterDashboardTable()" id="filter-waktu" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none text-[11px]">
               <option value="Semua">-- Semua Waktu --</option>
               <option value="Hari Ini">Hari Ini</option>
               <option value="&lt; 7 Hari">&lt; 7 Hari</option>
@@ -2422,36 +2743,40 @@
               <option value="&gt; 30 Hari">&gt; 30 Hari</option>
               <option value="No Data">No Data</option>
             </select>
-            <select onchange="filterDashboardTable()" id="filter-risiko" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none">
+            <select onchange="filterDashboardTable()" id="filter-risiko" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none text-[11px]">
               <option value="Semua">-- Semua Risiko --</option>
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-              <option value="Critical">Critical</option>
+              <option value="Low">Low (Hijau)</option>
+              <option value="Medium">Medium (Kuning)</option>
+              <option value="High">High (Oren)</option>
+              <option value="Critical">Critical (Merah)</option>
               <option value="No Data">No Data</option>
             </select>
+            ${activeRiskBadge}
+            ${activeTimeBadge}
+            ${activePrioBadge}
             <button onclick="resetDashboardFilters()" class="text-xs font-semibold px-2.5 py-1 border border-red-300 text-red-600 bg-red-50 hover:bg-red-100 rounded transition flex items-center gap-1 shadow-sm">
               <i class="ph ph-x-circle"></i> Reset Filter
             </button>
           </div>
-          <button onclick="downloadDashboardExcel()" class="text-xs font-semibold px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded transition flex items-center shadow-sm"><i class="ph ph-file-xls mr-1 text-base"></i> Download CSV</button>
+          <button onclick="downloadDashboardExcel()" class="text-xs font-semibold px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded transition flex items-center shadow-sm"><i class="ph ph-file-xls mr-1 text-base"></i> Download ${isCulvert ? 'Culvert' : 'Channel'} CSV</button>
         `;
 
-        document.getElementById('filter-prio').value = state.generalFilters.prio || 'Semua';
+        const filterPrioEl = document.getElementById('filter-prio');
+        if (filterPrioEl) filterPrioEl.value = state.generalFilters.prio || 'Semua';
         document.getElementById('filter-waktu').value = state.generalFilters.waktu || 'Semua';
         document.getElementById('filter-risiko').value = state.generalFilters.risiko || 'Semua';
 
         tableHead.innerHTML = `
           <tr class="bg-white text-[11px] text-gray-500 uppercase tracking-wider border-b">
-            <th class="p-2.5 font-bold">ID Objek (Terbaru)</th>
+            <th class="p-2.5 font-bold">${isCulvert ? 'ID Culvert (Terbaru)' : 'ID Channel (Terbaru)'}</th>
             <th class="p-2.5 font-bold">Mitra</th>
             <th class="p-2.5 font-bold">Tanggal Inspeksi</th>
             <th class="p-2.5 font-bold">Risk Level</th>
             <th class="p-2.5 font-bold">Last Check</th>
-            <th class="p-2.5 font-bold">Prioritas</th>
-            <th class="p-2.5 font-bold text-center">Jumlah Line</th>
+            ${isCulvert ? '<th class="p-2.5 font-bold">Prioritas</th>' : ''}
+            ${isCulvert ? '<th class="p-2.5 font-bold text-center">Jumlah Line</th>' : ''}
             <th class="p-2.5 font-bold text-center">Compliance</th>
-            <th class="p-2.5 font-bold text-center">Foto Inlet</th>
+            <th class="p-2.5 font-bold text-center">Foto Inlet / Saluran</th>
             <th class="p-2.5 font-bold text-center">Foto Outlet</th>
             <th class="p-2.5 font-bold text-center">Foto Tambahan</th>
           </tr>
@@ -2465,17 +2790,17 @@
         } else {
           emptyDiv.classList.add('hidden');
           records.forEach(rec => {
-            let rClass = "bg-green-100 text-green-800";
-            if (rec.riskLevel === 'Medium') rClass = "bg-amber-100 text-amber-800";
-            if (rec.riskLevel === 'High') rClass = "bg-orange-100 text-orange-800";
-            if (rec.riskLevel === 'Critical') rClass = "bg-purple-100 text-purple-800";
+            let rClass = "bg-green-100 text-green-800 border border-green-300";
+            if (rec.riskLevel === 'Medium') rClass = "bg-yellow-100 text-yellow-800 border border-yellow-300";
+            if (rec.riskLevel === 'High') rClass = "bg-orange-100 text-orange-800 border border-orange-300";
+            if (rec.riskLevel === 'Critical') rClass = "bg-red-100 text-red-800 border border-red-300";
 
-            const photoInletBtn = rec.fileInlet ? `<a href="${rec.fileInlet}" target="_blank" class="text-theme2 hover:text-theme4 transition inline-block p-1"><i class="ph ph-image text-lg"></i></a>` : `<span class="text-gray-300">-</span>`;
-            const photoOutletBtn = rec.fileOutlet ? `<a href="${rec.fileOutlet}" target="_blank" class="text-theme2 hover:text-theme4 transition inline-block p-1"><i class="ph ph-image text-lg"></i></a>` : `<span class="text-gray-300">-</span>`;
-            const photoOtherBtn = rec.fileOther ? `<a href="${rec.fileOther}" target="_blank" class="text-theme2 hover:text-theme4 transition inline-block p-1"><i class="ph ph-image text-lg"></i></a>` : `<span class="text-gray-300">-</span>`;
+            const photoInletBtn = rec.fileInlet ? `<a href="${rec.fileInlet}" target="_blank" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></a>` : `<span class="text-gray-300">-</span>`;
+            const photoOutletBtn = rec.fileOutlet ? `<a href="${rec.fileOutlet}" target="_blank" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></a>` : `<span class="text-gray-300">-</span>`;
+            const photoOtherBtn = rec.fileOther ? `<a href="${rec.fileOther}" target="_blank" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></a>` : `<span class="text-gray-300">-</span>`;
 
-            const priorityDisplay = getCulvertPriority(rec.idCulvert);
-            const lineCountDisplay = getCulvertLineCount(rec.idCulvert);
+            const priorityDisplay = isCulvert ? getCulvertPriority(rec.idCulvert) : '-';
+            const lineCountDisplay = isCulvert ? getCulvertLineCount(rec.idCulvert) : '-';
 
             const complianceDisplay = rec.compliance !== undefined && rec.compliance !== null ? `${rec.compliance}%` : '0%';
             let compBadgeClass = "text-red-600 bg-red-50";
@@ -2489,12 +2814,12 @@
                     <i class="ph ph-clock-counter-clockwise"></i> ${rec.idCulvert}
                   </button>
                 </td>
-                <td class="p-2.5 text-gray-600">${rec.contractor}</td>
+                <td class="p-2.5 text-gray-600 font-semibold">${rec.contractor}</td>
                 <td class="p-2.5 font-mono text-[11px] text-gray-500">${rec.date ? rec.date.split(' ')[0] : '-'}</td>
-                <td class="p-2.5"><span class="px-2 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${rec.riskLevel}</span></td>
+                <td class="p-2.5"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${rec.riskLevel}</span></td>
                 <td class="p-2.5 font-semibold text-gray-600">${rec.lastCheckCategory}</td>
-                <td class="p-2.5"><span class="font-bold text-rose-600">${priorityDisplay}</span></td>
-                <td class="p-2.5 text-center font-mono text-gray-600">${lineCountDisplay}</td>
+                ${isCulvert ? `<td class="p-2.5"><span class="font-bold ${priorityDisplay !== '-' ? 'text-rose-600' : 'text-gray-400'}">${priorityDisplay}</span></td>` : ''}
+                ${isCulvert ? `<td class="p-2.5 text-center font-mono text-gray-600">${lineCountDisplay}</td>` : ''}
                 <td class="p-2.5 text-center font-bold text-xs"><span class="px-2 py-1 rounded ${compBadgeClass}">${complianceDisplay}</span></td>
                 <td class="p-2.5 text-center">${photoInletBtn}</td>
                 <td class="p-2.5 text-center">${photoOutletBtn}</td>
@@ -2507,6 +2832,7 @@
       }
 
       else if (mode === 'culvert_list') {
+        const isCulvert = (state.dashboardAssetType || 'culvert') === 'culvert';
         const staticYears = [2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035];
         let yearOptions = `<option value="Semua">Semua Tahun</option>`;
         staticYears.forEach(y => {
@@ -2519,48 +2845,47 @@
         ];
         let monthOptions = `<option value="Semua">Semua Bulan</option>`;
         monthNames.forEach((m, idx) => {
-          monthOptions += `<option value="${idx + 1}">${m}</option>`;
+          const val = String(idx + 1).padStart(2, '0');
+          monthOptions += `<option value="${val}">${m}</option>`;
         });
 
         headerControls.innerHTML = `
-          <div class="flex flex-col gap-3 w-full">
-            <div class="flex flex-wrap items-center justify-between gap-3 text-xs w-full">
-              <div class="flex items-center gap-2">
-                <button onclick="setDashboardViewMode('general')" class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg transition flex items-center gap-1 shadow-sm">
-                  <i class="ph ph-arrow-left"></i> Kembali ke Dashboard
-                </button>
-                <span class="font-bold text-theme1 text-sm"><i class="ph ph-list-bullets"></i> Directory Culvert Monitoring</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <select onchange="changeMasterFilter('year', this.value)" id="mFilterYear" class="bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 font-bold text-gray-700 text-xs focus:outline-none">
-                  ${yearOptions}
-                </select>
-                <select onchange="changeMasterFilter('month', this.value)" id="mFilterMonth" class="bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 font-bold text-gray-700 text-xs focus:outline-none">
-                  ${monthOptions}
-                </select>
-                <button onclick="downloadDirectoryCSV()" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg transition text-xs flex items-center gap-1 shadow-sm">
-                  <i class="ph ph-download-simple text-sm"></i> Download Directory CSV
-                </button>
-              </div>
+          <div class="flex flex-wrap items-center justify-between gap-3 w-full">
+            <div class="flex items-center gap-2">
+              <button onclick="setDashboardViewMode('general')" class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg transition text-xs flex items-center gap-1 shadow-sm">
+                <i class="ph ph-arrow-left"></i> Kembali ke General
+              </button>
+              <h4 class="font-bold text-theme1 text-sm flex items-center gap-1.5 ml-2">
+                <i class="ph ${isCulvert ? 'ph-cube' : 'ph-git-commit'} text-theme3"></i> Directory Seluruh Data ${isCulvert ? 'Culvert' : 'Channel'}
+              </h4>
             </div>
-            <div class="relative w-full">
-              <input type="text" id="clvListSearch" oninput="searchCulvertListTable(this.value)" placeholder="Cari ID Culvert..." class="bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-xs font-semibold w-full focus:outline-none focus:border-theme3">
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+              <input type="text" id="clvListSearch" oninput="searchCulvertListTable()" placeholder="Cari ID ${isCulvert ? 'Culvert' : 'Channel'}..." class="bg-white border border-gray-300 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-theme3 font-semibold">
+              <select id="filterMasterYear" onchange="changeMasterFilter('year', this.value)" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none text-[11px]">
+                ${yearOptions}
+              </select>
+              <select id="filterMasterMonth" onchange="changeMasterFilter('month', this.value)" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none text-[11px]">
+                ${monthOptions}
+              </select>
+              <button onclick="downloadDirectoryCSV()" class="text-xs font-semibold px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded transition flex items-center shadow-sm">
+                <i class="ph ph-file-xls mr-1 text-base"></i> Download Directory CSV
+              </button>
             </div>
           </div>
         `;
 
-        document.getElementById('mFilterYear').value = state.masterFilters.year;
-        document.getElementById('mFilterMonth').value = state.masterFilters.month;
+        document.getElementById('filterMasterYear').value = state.masterFilters.year;
+        document.getElementById('filterMasterMonth').value = state.masterFilters.month;
 
         tableHead.innerHTML = `
           <tr class="bg-white text-[11px] text-gray-500 uppercase tracking-wider border-b">
-            <th class="p-2.5 font-bold">ID Culvert</th>
+            <th class="p-2.5 font-bold">${isCulvert ? 'ID Culvert' : 'ID Channel'}</th>
             <th class="p-2.5 font-bold">Mitra</th>
             <th class="p-2.5 font-bold">Tanggal Inspeksi</th>
             <th class="p-2.5 font-bold">Risk Level</th>
             <th class="p-2.5 font-bold">Compliance</th>
-            <th class="p-2.5 font-bold text-center">Jumlah Line</th>
-            <th class="p-2.5 font-bold">Prioritas</th>
+            ${isCulvert ? '<th class="p-2.5 font-bold text-center">Jumlah Line</th>' : ''}
+            ${isCulvert ? '<th class="p-2.5 font-bold">Prioritas</th>' : ''}
           </tr>
         `;
 
@@ -2588,13 +2913,13 @@
             <th class="p-2.5 font-bold">Inspector</th>
             <th class="p-2.5 font-bold">Risk Level</th>
             <th class="p-2.5 font-bold text-center">Compliance</th>
-            <th class="p-2.5 font-bold text-center">Inlet</th>
+            <th class="p-2.5 font-bold text-center">Inlet / Saluran</th>
             <th class="p-2.5 font-bold text-center">Outlet</th>
             <th class="p-2.5 font-bold text-center">Lainnya</th>
           </tr>
         `;
 
-        const histories = state.inspections.filter(i => i.idCulvert === id).sort((a, b) => new Date(b.date) - new Date(a.date));
+        const histories = state.inspections.filter(i => i.idCulvert === id).sort((a, b) => parseDateSafe(b.date) - parseDateSafe(a.date));
         tbody.innerHTML = '';
 
         if (histories.length === 0) {
@@ -2602,10 +2927,10 @@
         } else {
           emptyDiv.classList.add('hidden');
           histories.forEach(rec => {
-            let rClass = "bg-green-100 text-green-800";
-            if (rec.riskLevel === 'Medium') rClass = "bg-amber-100 text-amber-800";
-            if (rec.riskLevel === 'High') rClass = "bg-orange-100 text-orange-800";
-            if (rec.riskLevel === 'Critical') rClass = "bg-purple-100 text-purple-800";
+            let rClass = "bg-green-100 text-green-800 border border-green-300";
+            if (rec.riskLevel === 'Medium') rClass = "bg-yellow-100 text-yellow-800 border border-yellow-300";
+            if (rec.riskLevel === 'High') rClass = "bg-orange-100 text-orange-800 border border-orange-300";
+            if (rec.riskLevel === 'Critical') rClass = "bg-red-100 text-red-800 border border-red-300";
 
             const photoInletBtn = rec.fileInlet ? `<a href="${rec.fileInlet}" target="_blank" class="text-theme2 hover:text-theme4 transition inline-block p-1"><i class="ph ph-image text-lg"></i></a>` : `<span class="text-gray-300">-</span>`;
             const photoOutletBtn = rec.fileOutlet ? `<a href="${rec.fileOutlet}" target="_blank" class="text-theme2 hover:text-theme4 transition inline-block p-1"><i class="ph ph-image text-lg"></i></a>` : `<span class="text-gray-300">-</span>`;
@@ -2617,7 +2942,7 @@
               <tr>
                 <td class="p-2.5 font-mono text-gray-700 font-semibold">${rec.date || '-'}</td>
                 <td class="p-2.5 text-gray-700 font-semibold">${rec.inspector || '-'}</td>
-                <td class="p-2.5"><span class="px-2 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${rec.riskLevel}</span></td>
+                <td class="p-2.5"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${rec.riskLevel}</span></td>
                 <td class="p-2.5 text-center font-bold">${complianceDisplay}</td>
                 <td class="p-2.5 text-center">${photoInletBtn}</td>
                 <td class="p-2.5 text-center">${photoOutletBtn}</td>
@@ -2635,25 +2960,47 @@
       const emptyDiv = document.getElementById('dashTableEmpty');
       if (!tbody) return;
 
+      const isCulvert = (state.dashboardAssetType || 'culvert') === 'culvert';
       const userContractor = state.user ? state.user.contractor : 'Semua';
-      const searchVal = (document.getElementById('clvListSearch') ? document.getElementById('clvListSearch').value : '').toLowerCase();
+      const searchVal = (document.getElementById('clvListSearch') ? document.getElementById('clvListSearch').value : '').toLowerCase().trim();
+
+      const validMasterIds = new Set();
+      if (isCulvert) {
+        state.culverts.forEach(c => {
+          if (userContractor === 'Semua' || c.contractor === userContractor) {
+            validMasterIds.add(String(c.id || '').trim().toUpperCase());
+          }
+        });
+      } else {
+        state.channels.forEach(ch => {
+          if (userContractor === 'Semua' || ch.contractor === userContractor) {
+            validMasterIds.add(String(ch.id || '').trim().toUpperCase());
+          }
+        });
+      }
 
       let list = state.inspections.filter(ins => {
+        const isChan = isChannelInspection(ins);
+        if (isCulvert && isChan) return false;
+        if (!isCulvert && !isChan) return false;
+
+        const assetId = String(ins.idCulvert || ins.id || '').trim().toUpperCase();
+        if (!validMasterIds.has(assetId)) return false;
+
         if (userContractor !== 'Semua' && ins.contractor !== userContractor) return false;
         return matchYearAndMonth(ins.date, state.masterFilters.year, state.masterFilters.month);
       });
 
       if (searchVal) {
-        list = list.filter(i => i.idCulvert.toLowerCase().includes(searchVal));
+        list = list.filter(i => (i.idCulvert || i.id || '').toLowerCase().includes(searchVal));
       }
 
-      // Default sorting for Directory display: ID Culvert (A-Z) then Date
       list.sort((a, b) => {
-        const idA = (a.idCulvert || '').toLowerCase();
-        const idB = (b.idCulvert || '').toLowerCase();
+        const idA = (a.idCulvert || a.id || '').toLowerCase();
+        const idB = (b.idCulvert || b.id || '').toLowerCase();
         if (idA < idB) return -1;
         if (idA > idB) return 1;
-        return new Date(a.date) - new Date(b.date);
+        return parseDateSafe(a.date) - parseDateSafe(b.date);
       });
 
       tbody.innerHTML = '';
@@ -2662,23 +3009,23 @@
       } else {
         if (emptyDiv) emptyDiv.classList.add('hidden');
         list.forEach(item => {
-          let rClass = "bg-green-100 text-green-800";
-          if (item.riskLevel === 'Medium') rClass = "bg-amber-100 text-amber-800";
-          if (item.riskLevel === 'High') rClass = "bg-orange-100 text-orange-800";
-          if (item.riskLevel === 'Critical') rClass = "bg-purple-100 text-purple-800";
+          let rClass = "bg-green-100 text-green-800 border border-green-300";
+          if (item.riskLevel === 'Medium') rClass = "bg-yellow-100 text-yellow-800 border border-yellow-300";
+          if (item.riskLevel === 'High') rClass = "bg-orange-100 text-orange-800 border border-orange-300";
+          if (item.riskLevel === 'Critical') rClass = "bg-red-100 text-red-800 border border-red-300";
 
-          const priorityDisplay = getCulvertPriority(item.idCulvert);
-          const lineCountDisplay = getCulvertLineCount(item.idCulvert);
+          const priorityDisplay = isCulvert ? getCulvertPriority(item.idCulvert) : '-';
+          const lineCountDisplay = isCulvert ? getCulvertLineCount(item.idCulvert) : '-';
 
           const row = `
             <tr>
-              <td class="p-2.5 font-bold font-mono text-gray-800">${item.idCulvert}</td>
-              <td class="p-2.5 text-gray-600 font-semibold">${item.contractor}</td>
+              <td class="p-2.5 font-bold font-mono text-gray-800">${item.idCulvert || item.id || '-'}</td>
+              <td class="p-2.5 text-gray-600 font-semibold">${item.contractor || '-'}</td>
               <td class="p-2.5 font-mono text-gray-500">${item.date ? item.date.split(' ')[0] : '-'}</td>
-              <td class="p-2.5"><span class="px-2 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${item.riskLevel}</span></td>
-              <td class="p-2.5 font-bold">${item.compliance}%</td>
-              <td class="p-2.5 text-center font-mono">${lineCountDisplay}</td>
-              <td class="p-2.5 font-semibold text-rose-600">${priorityDisplay}</td>
+              <td class="p-2.5"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${item.riskLevel || 'No Data'}</span></td>
+              <td class="p-2.5 font-bold">${item.compliance !== undefined && item.compliance !== null ? item.compliance : 0}%</td>
+              ${isCulvert ? `<td class="p-2.5 text-center font-mono">${lineCountDisplay}</td>` : ''}
+              ${isCulvert ? `<td class="p-2.5 font-semibold text-rose-600">${priorityDisplay}</td>` : ''}
             </tr>
           `;
           tbody.innerHTML += row;
@@ -2702,9 +3049,40 @@
         type: 'doughnut',
         data: {
           labels: ['Low', 'Medium', 'High', 'Critical'],
-          datasets: [{ data: [counts.Low, counts.Medium, counts.High, counts.Critical], backgroundColor: ['#22c55e', '#f59e0b', '#f97316', '#a855f7'] }]
+          datasets: [{
+            data: [counts.Low, counts.Medium, counts.High, counts.Critical],
+            backgroundColor: ['#22c55e', '#eab308', '#f97316', '#ef4444'], // Hijau, Kuning, Oren, Merah
+            hoverOffset: 6
+          }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { boxWidth: 10, font: { size: 10 } }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.label}: ${context.raw} titik (Klik untuk filter)`;
+                }
+              }
+            }
+          },
+          onClick: (event, elements, chart) => {
+            if (elements && elements.length > 0) {
+              const index = elements[0].index;
+              const label = chart.data.labels[index];
+              filterDashboardByRisk(label);
+            }
+          },
+          onHover: (event, elements) => {
+            const canvas = event.native ? event.native.target : null;
+            if (canvas) canvas.style.cursor = elements && elements.length > 0 ? 'pointer' : 'default';
+          }
+        }
       });
     }
 
@@ -2720,9 +3098,37 @@
         type: 'pie',
         data: {
           labels: ['Hari Ini', '< 7 Hari', '> 7 Hari', '> 30 Hari'],
-          datasets: [{ data: [counts['Hari Ini'], counts['< 7 Hari'], counts['> 7 Hari'], counts['> 30 Hari']], backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'] }]
+          datasets: [{
+            data: [counts['Hari Ini'], counts['< 7 Hari'], counts['> 7 Hari'], counts['> 30 Hari']],
+            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+            hoverOffset: 6
+          }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.label}: ${context.raw} titik (Klik untuk filter)`;
+                }
+              }
+            }
+          },
+          onClick: (event, elements, chart) => {
+            if (elements && elements.length > 0) {
+              const index = elements[0].index;
+              const label = chart.data.labels[index];
+              filterDashboardByTime(label);
+            }
+          },
+          onHover: (event, elements) => {
+            const canvas = event.native ? event.native.target : null;
+            if (canvas) canvas.style.cursor = elements && elements.length > 0 ? 'pointer' : 'default';
+          }
+        }
       });
     }
 
@@ -2730,24 +3136,77 @@
       const ctx = document.getElementById('prioChart');
       if (!ctx) return;
 
-      let p1 = 0, p2 = 0, pOther = 0;
-      records.forEach(r => {
-        if (!r.priority) { pOther++; return; }
-        const p = r.priority.toString().trim().toLowerCase();
-        if (p === '1' || p === 'prioritas 1') p1++;
-        else if (p === '2' || p === 'prioritas 2') p2++;
-        else pOther++;
-      });
+      const isCulvert = (state.dashboardAssetType || 'culvert') === 'culvert';
+      const prioTitle = document.getElementById('prioChartTitle');
 
-      if (state.charts.prio) state.charts.prio.destroy();
-      state.charts.prio = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Prioritas 1', 'Prioritas 2', 'Lainnya'],
-          datasets: [{ data: [p1, p2, pOther], backgroundColor: ['#e11d48', '#3b82f6', '#9ca3af'] }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
-      });
+      if (isCulvert) {
+        if (prioTitle) prioTitle.innerHTML = `<i class="ph ph-flag text-theme3"></i> Prioritas Culvert <span class="text-[10px] text-gray-400 font-normal">(Klik untuk filter)</span>`;
+        let p1 = 0, p2 = 0, pOther = 0;
+        records.forEach(r => {
+          if (!r.priority) { pOther++; return; }
+          const p = r.priority.toString().trim().toLowerCase();
+          if (p === '1' || p === 'prioritas 1') p1++;
+          else if (p === '2' || p === 'prioritas 2') p2++;
+          else pOther++;
+        });
+
+        if (state.charts.prio) state.charts.prio.destroy();
+        state.charts.prio = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Prioritas 1', 'Prioritas 2', 'Lainnya'],
+            datasets: [{
+              data: [p1, p2, pOther],
+              backgroundColor: ['#ef4444', '#3b82f6', '#9ca3af'],
+              hoverOffset: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return ` ${context.label}: ${context.raw} titik (Klik untuk filter)`;
+                  }
+                }
+              }
+            },
+            onClick: (event, elements, chart) => {
+              if (elements && elements.length > 0) {
+                const index = elements[0].index;
+                const label = chart.data.labels[index];
+                filterDashboardByPrio(label);
+              }
+            },
+            onHover: (event, elements) => {
+              const canvas = event.native ? event.native.target : null;
+              if (canvas) canvas.style.cursor = elements && elements.length > 0 ? 'pointer' : 'default';
+            }
+          }
+        });
+      } else {
+        if (prioTitle) prioTitle.innerText = "Kepatuhan (Compliance) Channel";
+        let cHigh = 0, cMed = 0, cLow = 0;
+        records.forEach(r => {
+          const comp = r.compliance !== undefined ? r.compliance : 0;
+          if (comp >= 80) cHigh++;
+          else if (comp >= 50) cMed++;
+          else cLow++;
+        });
+
+        if (state.charts.prio) state.charts.prio.destroy();
+        state.charts.prio = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['≥ 80% (Baik)', '50-79% (Cukup)', '< 50% (Perlu Perhatian)'],
+            datasets: [{ data: [cHigh, cMed, cLow], backgroundColor: ['#22c55e', '#eab308', '#ef4444'], hoverOffset: 6 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+        });
+      }
     }
 
     // RENDER 3 INDIVIDUAL MASTER TABLES IN ADMIN SECTION WITH SEARCH & MITRA FILTERS
@@ -3721,5 +4180,4 @@
     };
   </script>
 </body>
-
 </html>
