@@ -1007,7 +1007,10 @@
       selectedCulvertHistoryId: null,
       masterFilters: {
         year: 'Semua',
-        month: 'Semua'
+        month: 'Semua',
+        inspector: 'Semua',
+        asset: 'Semua',
+        date: ''
       },
       generalFilters: {
         prio: 'Semua',
@@ -2462,6 +2465,7 @@
     window.filterDashboardByPrio = filterDashboardByPrio;
 
     function toggleTotalCulvertClick() {
+      state.masterFilters.asset = (state.dashboardAssetType || 'culvert') === 'channel' ? 'type_channel' : 'type_culvert';
       setDashboardViewMode('culvert_list');
     }
 
@@ -2478,8 +2482,34 @@
 
     function changeMasterFilter(field, value) {
       state.masterFilters[field] = value;
+      if (field === 'asset') {
+        updateDirectoryTableHead();
+      }
       renderCulvertListTableRows();
     }
+
+    function resetMasterFilters() {
+      state.masterFilters.inspector = 'Semua';
+      state.masterFilters.asset = (state.dashboardAssetType || 'culvert') === 'channel' ? 'type_channel' : 'type_culvert';
+      state.masterFilters.date = '';
+      state.masterFilters.year = 'Semua';
+      state.masterFilters.month = 'Semua';
+
+      const searchEl = document.getElementById('clvListSearch');
+      if (searchEl) searchEl.value = '';
+      const inspEl = document.getElementById('filterMasterInspector');
+      if (inspEl) inspEl.value = 'Semua';
+      const assetEl = document.getElementById('filterMasterAsset');
+      if (assetEl) assetEl.value = state.masterFilters.asset;
+      const dateEl = document.getElementById('filterMasterDate');
+      if (dateEl) dateEl.value = '';
+
+      updateDirectoryTableHead();
+      renderCulvertListTableRows();
+    }
+
+    window.changeMasterFilter = changeMasterFilter;
+    window.resetMasterFilters = resetMasterFilters;
 
     function renderDashboard() {
       const assetType = state.dashboardAssetType || 'culvert';
@@ -2567,7 +2597,7 @@
       let csvContent = "data:text/csv;charset=utf-8,";
 
       if (isCulvert) {
-        csvContent += "Mitra,ID Culvert,Last Inspection,Risk Level,Complience Score,Jumlah line,Prioritas\n";
+        csvContent += "Mitra,ID Culvert,Nama Inspector,Last Inspection,Risk Level,Complience Score,Jumlah line,Prioritas\n";
         records.forEach(rec => {
           const lastInsp = rec.date ? rec.date.split(' ')[0] : '-';
           const priorityVal = getCulvertPriority(rec.idCulvert);
@@ -2577,6 +2607,7 @@
           const row = [
             `"${rec.contractor || '-'}"`,
             `"${rec.idCulvert || '-'}"`,
+            `"${rec.inspector || '-'}"`,
             `"${lastInsp}"`,
             `"${rec.riskLevel || '-'}"`,
             `"${compVal}"`,
@@ -2586,7 +2617,7 @@
           csvContent += row.join(",") + "\n";
         });
       } else {
-        csvContent += "Mitra,ID Channel,Last Inspection,Risk Level,Complience Score\n";
+        csvContent += "Mitra,ID Channel,Nama Inspector,Last Inspection,Risk Level,Complience Score\n";
         records.forEach(rec => {
           const lastInsp = rec.date ? rec.date.split(' ')[0] : '-';
           const compVal = `${rec.compliance !== undefined ? rec.compliance : 0}%`;
@@ -2594,6 +2625,7 @@
           const row = [
             `"${rec.contractor || '-'}"`,
             `"${rec.idCulvert || '-'}"`,
+            `"${rec.inspector || '-'}"`,
             `"${lastInsp}"`,
             `"${rec.riskLevel || '-'}"`,
             `"${compVal}"`
@@ -2612,62 +2644,116 @@
       document.body.removeChild(link);
     }
 
-    // REVISED CSV DOWNLOAD FOR DIRECTORY VIEW: Filtered by Year/Month, sorted by ID then Date
-    function downloadDirectoryCSV() {
-      const isCulvert = (state.dashboardAssetType || 'culvert') === 'culvert';
-      const selectedYear = state.masterFilters.year;
-      const selectedMonth = state.masterFilters.month;
+    function getFilteredDirectoryInspections() {
       const userContractor = state.user ? state.user.contractor : 'Semua';
+      const searchVal = (document.getElementById('clvListSearch') ? document.getElementById('clvListSearch').value : '').toLowerCase().trim();
+
+      const assetFilter = state.masterFilters.asset || 'Semua';
+      const inspectorFilter = state.masterFilters.inspector || 'Semua';
+      const dateFilter = (state.masterFilters.date || '').trim();
 
       // Master IDs set: only include IDs that exist in the active master database sheet
-      const validMasterIds = new Set();
-      if (isCulvert) {
-        state.culverts.forEach(c => {
-          if (userContractor === 'Semua' || c.contractor === userContractor) {
-            validMasterIds.add(String(c.id || '').trim().toUpperCase());
-          }
-        });
-      } else {
-        state.channels.forEach(ch => {
-          if (userContractor === 'Semua' || ch.contractor === userContractor) {
-            validMasterIds.add(String(ch.id || '').trim().toUpperCase());
-          }
-        });
-      }
+      const validCulvertIds = new Set();
+      (state.culverts || []).forEach(c => {
+        if (userContractor === 'Semua' || c.contractor === userContractor) {
+          validCulvertIds.add(String(c.id || '').trim().toUpperCase());
+        }
+      });
 
-      let list = state.inspections.filter(ins => {
+      const validChannelIds = new Set();
+      (state.channels || []).forEach(ch => {
+        if (userContractor === 'Semua' || ch.contractor === userContractor) {
+          validChannelIds.add(String(ch.id || '').trim().toUpperCase());
+        }
+      });
+
+      let list = (state.inspections || []).filter(ins => {
         const isChan = isChannelInspection(ins);
-        if (isCulvert && isChan) return false;
-        if (!isCulvert && !isChan) return false;
-
         const assetId = String(ins.idCulvert || ins.id || '').trim().toUpperCase();
-        if (!validMasterIds.has(assetId)) return false;
+
+        if (isChan) {
+          if (!validChannelIds.has(assetId)) return false;
+        } else {
+          if (!validCulvertIds.has(assetId)) return false;
+        }
 
         if (userContractor !== 'Semua' && ins.contractor !== userContractor) return false;
-        return matchYearAndMonth(ins.date, selectedYear, selectedMonth);
+
+        // 1. FILTER CULVERT / CHANNEL
+        if (assetFilter === 'type_culvert') {
+          if (isChan) return false;
+        } else if (assetFilter === 'type_channel') {
+          if (!isChan) return false;
+        } else if (assetFilter.startsWith('clv_')) {
+          const targetId = assetFilter.substring(4).toUpperCase().trim();
+          if (isChan || assetId !== targetId) return false;
+        } else if (assetFilter.startsWith('chn_')) {
+          const targetId = assetFilter.substring(4).toUpperCase().trim();
+          if (!isChan || assetId !== targetId) return false;
+        } else if (assetFilter !== 'Semua') {
+          if (assetId !== assetFilter.toUpperCase().trim()) return false;
+        }
+
+        // 2. FILTER NAMA INSPEKTOR
+        if (inspectorFilter !== 'Semua') {
+          const insName = String(ins.inspector || '').trim().toLowerCase();
+          if (insName !== inspectorFilter.trim().toLowerCase()) return false;
+        }
+
+        // 3. FILTER TANGGAL
+        if (dateFilter) {
+          const rawDate = String(ins.date || '').trim();
+          const insDateOnly = rawDate.split(' ')[0].split('T')[0].trim();
+          if (insDateOnly !== dateFilter) return false;
+        } else {
+          // If no specific date chosen, use Year/Month if set
+          if (!matchYearAndMonth(ins.date, state.masterFilters.year, state.masterFilters.month)) return false;
+        }
+
+        // Free search
+        if (searchVal) {
+          const matchId = (ins.idCulvert || ins.id || '').toLowerCase().includes(searchVal);
+          const matchInspector = (ins.inspector || '').toLowerCase().includes(searchVal);
+          const matchContractor = (ins.contractor || '').toLowerCase().includes(searchVal);
+          if (!matchId && !matchInspector && !matchContractor) return false;
+        }
+
+        return true;
       });
 
       // SORT BY ID (A-Z) THEN DATE ASCENDING
       list.sort((a, b) => {
-        const idA = (a.idCulvert || '').toLowerCase();
-        const idB = (b.idCulvert || '').toLowerCase();
+        const idA = (a.idCulvert || a.id || '').toLowerCase();
+        const idB = (b.idCulvert || b.id || '').toLowerCase();
         if (idA < idB) return -1;
         if (idA > idB) return 1;
         return parseDateSafe(a.date) - parseDateSafe(b.date);
       });
 
+      return list;
+    }
+
+    // REVISED CSV DOWNLOAD FOR DIRECTORY VIEW: Adds Inspector column & respects active filters
+    function downloadDirectoryCSV() {
+      const list = getFilteredDirectoryInspections();
+      const assetFilter = state.masterFilters.asset || 'Semua';
+      const isOnlyCulvert = assetFilter === 'type_culvert' || assetFilter.startsWith('clv_') || (assetFilter === 'Semua' && (state.dashboardAssetType || 'culvert') === 'culvert' && !list.some(r => isChannelInspection(r)));
+      const isOnlyChannel = assetFilter === 'type_channel' || assetFilter.startsWith('chn_') || (assetFilter === 'Semua' && state.dashboardAssetType === 'channel' && !list.some(r => !isChannelInspection(r)));
+
       let csvContent = "data:text/csv;charset=utf-8,";
-      if (isCulvert) {
-        csvContent += "ID Culvert,Mitra,Tanggal Inspeksi,Risk Level,Compliance,Jumlah Line,Prioritas\n";
+
+      if (isOnlyCulvert && !list.some(r => isChannelInspection(r))) {
+        csvContent += "ID Culvert,Mitra,Nama Inspector,Tanggal Inspeksi,Risk Level,Compliance,Jumlah Line,Prioritas\n";
         list.forEach(rec => {
           const lastInsp = rec.date ? rec.date.split(' ')[0] : '-';
           const priorityVal = getCulvertPriority(rec.idCulvert);
           const lineCountVal = getCulvertLineCount(rec.idCulvert);
-          const compVal = `${rec.compliance !== undefined ? rec.compliance : 0}%`;
+          const compVal = `${rec.compliance !== undefined && rec.compliance !== null ? rec.compliance : 0}%`;
 
           const row = [
             `"${rec.idCulvert || '-'}"`,
             `"${rec.contractor || '-'}"`,
+            `"${rec.inspector || '-'}"`,
             `"${lastInsp}"`,
             `"${rec.riskLevel || '-'}"`,
             `"${compVal}"`,
@@ -2676,18 +2762,41 @@
           ];
           csvContent += row.join(",") + "\n";
         });
-      } else {
-        csvContent += "ID Channel,Mitra,Tanggal Inspeksi,Risk Level,Compliance\n";
+      } else if (isOnlyChannel && !list.some(r => !isChannelInspection(r))) {
+        csvContent += "ID Channel,Mitra,Nama Inspector,Tanggal Inspeksi,Risk Level,Compliance\n";
         list.forEach(rec => {
           const lastInsp = rec.date ? rec.date.split(' ')[0] : '-';
-          const compVal = `${rec.compliance !== undefined ? rec.compliance : 0}%`;
+          const compVal = `${rec.compliance !== undefined && rec.compliance !== null ? rec.compliance : 0}%`;
 
           const row = [
             `"${rec.idCulvert || '-'}"`,
             `"${rec.contractor || '-'}"`,
+            `"${rec.inspector || '-'}"`,
             `"${lastInsp}"`,
             `"${rec.riskLevel || '-'}"`,
             `"${compVal}"`
+          ];
+          csvContent += row.join(",") + "\n";
+        });
+      } else {
+        csvContent += "Tipe Asset,ID Asset,Mitra,Nama Inspector,Tanggal Inspeksi,Risk Level,Compliance,Jumlah Line,Prioritas\n";
+        list.forEach(rec => {
+          const isChan = isChannelInspection(rec);
+          const lastInsp = rec.date ? rec.date.split(' ')[0] : '-';
+          const priorityVal = isChan ? '-' : getCulvertPriority(rec.idCulvert);
+          const lineCountVal = isChan ? '-' : getCulvertLineCount(rec.idCulvert);
+          const compVal = `${rec.compliance !== undefined && rec.compliance !== null ? rec.compliance : 0}%`;
+
+          const row = [
+            `"${isChan ? 'Channel' : 'Culvert'}"`,
+            `"${rec.idCulvert || '-'}"`,
+            `"${rec.contractor || '-'}"`,
+            `"${rec.inspector || '-'}"`,
+            `"${lastInsp}"`,
+            `"${rec.riskLevel || '-'}"`,
+            `"${compVal}"`,
+            `"${lineCountVal}"`,
+            `"${priorityVal}"`
           ];
           csvContent += row.join(",") + "\n";
         });
@@ -2696,8 +2805,14 @@
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      const prefix = isCulvert ? 'Culvert' : 'Channel';
-      link.setAttribute("download", `${prefix}_Directory_${selectedYear}_${selectedMonth}.csv`);
+
+      let prefix = 'Directory';
+      if (isOnlyCulvert && !list.some(r => isChannelInspection(r))) prefix = 'Culvert_Directory';
+      else if (isOnlyChannel && !list.some(r => !isChannelInspection(r))) prefix = 'Channel_Directory';
+      else prefix = 'All_Directory';
+
+      const dateSuffix = state.masterFilters.date || (state.masterFilters.year !== 'Semua' ? `${state.masterFilters.year}_${state.masterFilters.month}` : new Date().toISOString().slice(0, 10));
+      link.setAttribute("download", `${prefix}_${dateSuffix}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -2832,22 +2947,74 @@
       }
 
       else if (mode === 'culvert_list') {
-        const isCulvert = (state.dashboardAssetType || 'culvert') === 'culvert';
-        const staticYears = [2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035];
-        let yearOptions = `<option value="Semua">Semua Tahun</option>`;
-        staticYears.forEach(y => {
-          yearOptions += `<option value="${y}">${y}</option>`;
+        const userContractor = state.user ? state.user.contractor : 'Semua';
+
+        // 1. Build Inspector Options
+        const inspectorNames = new Set();
+        if (Array.isArray(state.inspectors)) {
+          state.inspectors.forEach(ins => {
+            if (userContractor === 'Semua' || ins.contractor === userContractor) {
+              if (ins && ins.name && ins.name.trim() && ins.name.trim() !== '-') {
+                inspectorNames.add(ins.name.trim());
+              }
+            }
+          });
+        }
+        if (Array.isArray(state.inspections)) {
+          state.inspections.forEach(ins => {
+            if (userContractor === 'Semua' || ins.contractor === userContractor) {
+              if (ins && ins.inspector && ins.inspector.trim() && ins.inspector.trim() !== '-') {
+                inspectorNames.add(ins.inspector.trim());
+              }
+            }
+          });
+        }
+        const sortedInspectors = Array.from(inspectorNames).sort((a, b) => a.localeCompare(b));
+        let inspectorOptions = `<option value="Semua">-- Semua Inspector --</option>`;
+        sortedInspectors.forEach(name => {
+          inspectorOptions += `<option value="${name}">${name}</option>`;
         });
 
-        const monthNames = [
-          "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-          "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-        ];
-        let monthOptions = `<option value="Semua">Semua Bulan</option>`;
-        monthNames.forEach((m, idx) => {
-          const val = String(idx + 1).padStart(2, '0');
-          monthOptions += `<option value="${val}">${m}</option>`;
-        });
+        // 2. Build Culvert & Channel Asset Options
+        const culvertIds = [];
+        if (Array.isArray(state.culverts)) {
+          state.culverts.forEach(c => {
+            if (userContractor === 'Semua' || c.contractor === userContractor) {
+              if (c.id && !culvertIds.includes(c.id)) culvertIds.push(c.id);
+            }
+          });
+        }
+        culvertIds.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+        const channelIds = [];
+        if (Array.isArray(state.channels)) {
+          state.channels.forEach(ch => {
+            if (userContractor === 'Semua' || ch.contractor === userContractor) {
+              if (ch.id && !channelIds.includes(ch.id)) channelIds.push(ch.id);
+            }
+          });
+        }
+        channelIds.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+        let assetOptions = `
+          <option value="Semua">-- Semua Culvert & Channel --</option>
+          <option value="type_culvert">Semua Culvert</option>
+          <option value="type_channel">Semua Channel</option>
+        `;
+        if (culvertIds.length > 0) {
+          assetOptions += `<optgroup label="Daftar Culvert">`;
+          culvertIds.forEach(id => {
+            assetOptions += `<option value="clv_${id}">${id}</option>`;
+          });
+          assetOptions += `</optgroup>`;
+        }
+        if (channelIds.length > 0) {
+          assetOptions += `<optgroup label="Daftar Channel">`;
+          channelIds.forEach(id => {
+            assetOptions += `<option value="chn_${id}">${id}</option>`;
+          });
+          assetOptions += `</optgroup>`;
+        }
 
         headerControls.innerHTML = `
           <div class="flex flex-wrap items-center justify-between gap-3 w-full">
@@ -2856,17 +3023,24 @@
                 <i class="ph ph-arrow-left"></i> Kembali ke General
               </button>
               <h4 class="font-bold text-theme1 text-sm flex items-center gap-1.5 ml-2">
-                <i class="ph ${isCulvert ? 'ph-cube' : 'ph-git-commit'} text-theme3"></i> Directory Seluruh Data ${isCulvert ? 'Culvert' : 'Channel'}
+                <i class="ph ph-folder-open text-theme3"></i> Directory Seluruh Data
               </h4>
             </div>
             <div class="flex flex-wrap items-center gap-2 text-xs">
-              <input type="text" id="clvListSearch" oninput="searchCulvertListTable()" placeholder="Cari ID ${isCulvert ? 'Culvert' : 'Channel'}..." class="bg-white border border-gray-300 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-theme3 font-semibold">
-              <select id="filterMasterYear" onchange="changeMasterFilter('year', this.value)" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none text-[11px]">
-                ${yearOptions}
+              <select id="filterMasterInspector" onchange="changeMasterFilter('inspector', this.value)" class="bg-white border border-gray-300 rounded px-2.5 py-1 font-semibold text-gray-700 focus:outline-none focus:border-theme3 text-[11px] shadow-sm max-w-[150px]" title="Filter Nama Inspector">
+                ${inspectorOptions}
               </select>
-              <select id="filterMasterMonth" onchange="changeMasterFilter('month', this.value)" class="bg-white border border-gray-300 rounded px-2 py-1 font-semibold text-gray-700 focus:outline-none text-[11px]">
-                ${monthOptions}
+              <select id="filterMasterAsset" onchange="changeMasterFilter('asset', this.value)" class="bg-white border border-gray-300 rounded px-2.5 py-1 font-semibold text-gray-700 focus:outline-none focus:border-theme3 text-[11px] shadow-sm max-w-[170px]" title="Filter Culvert / Channel">
+                ${assetOptions}
               </select>
+              <div class="flex items-center gap-1 bg-white border border-gray-300 rounded px-2 py-0.5 shadow-sm" title="Filter Tanggal">
+                <span class="text-gray-500 font-bold text-[10px]">Tgl:</span>
+                <input type="date" id="filterMasterDate" onchange="changeMasterFilter('date', this.value)" oninput="changeMasterFilter('date', this.value)" class="text-[11px] font-semibold text-gray-700 focus:outline-none bg-transparent">
+              </div>
+              <input type="text" id="clvListSearch" oninput="searchCulvertListTable()" placeholder="Cari ID..." class="bg-white border border-gray-300 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-theme3 font-semibold w-24 sm:w-28 shadow-sm">
+              <button onclick="resetMasterFilters()" class="text-[11px] text-gray-600 hover:text-red-600 px-2 py-1 rounded border border-gray-300 bg-white hover:bg-red-50 flex items-center gap-1 transition shadow-sm" title="Reset Semua Filter">
+                <i class="ph ph-arrow-counter-clockwise"></i> Reset
+              </button>
               <button onclick="downloadDirectoryCSV()" class="text-xs font-semibold px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded transition flex items-center shadow-sm">
                 <i class="ph ph-file-xls mr-1 text-base"></i> Download Directory CSV
               </button>
@@ -2874,21 +3048,11 @@
           </div>
         `;
 
-        document.getElementById('filterMasterYear').value = state.masterFilters.year;
-        document.getElementById('filterMasterMonth').value = state.masterFilters.month;
+        if (document.getElementById('filterMasterInspector')) document.getElementById('filterMasterInspector').value = state.masterFilters.inspector || 'Semua';
+        if (document.getElementById('filterMasterAsset')) document.getElementById('filterMasterAsset').value = state.masterFilters.asset || 'Semua';
+        if (document.getElementById('filterMasterDate')) document.getElementById('filterMasterDate').value = state.masterFilters.date || '';
 
-        tableHead.innerHTML = `
-          <tr class="bg-white text-[11px] text-gray-500 uppercase tracking-wider border-b">
-            <th class="p-2.5 font-bold">${isCulvert ? 'ID Culvert' : 'ID Channel'}</th>
-            <th class="p-2.5 font-bold">Mitra</th>
-            <th class="p-2.5 font-bold">Tanggal Inspeksi</th>
-            <th class="p-2.5 font-bold">Risk Level</th>
-            <th class="p-2.5 font-bold">Compliance</th>
-            ${isCulvert ? '<th class="p-2.5 font-bold text-center">Jumlah Line</th>' : ''}
-            ${isCulvert ? '<th class="p-2.5 font-bold">Prioritas</th>' : ''}
-          </tr>
-        `;
-
+        updateDirectoryTableHead();
         renderCulvertListTableRows();
       }
 
@@ -2955,53 +3119,39 @@
       }
     }
 
+    function updateDirectoryTableHead() {
+      const tableHead = document.getElementById('dashboardTableHead');
+      if (!tableHead) return;
+      const assetFilter = state.masterFilters.asset || 'Semua';
+      const isChannelOnly = assetFilter === 'type_channel' || assetFilter.startsWith('chn_');
+      const isCulvertOnly = assetFilter === 'type_culvert' || assetFilter.startsWith('clv_');
+
+      const assetHeader = isCulvertOnly ? 'ID Culvert' : (isChannelOnly ? 'ID Channel' : 'ID Asset');
+      const showCulvertCols = !isChannelOnly;
+
+      tableHead.innerHTML = `
+        <tr class="bg-white text-[11px] text-gray-500 uppercase tracking-wider border-b">
+          <th class="p-2.5 font-bold">${assetHeader}</th>
+          <th class="p-2.5 font-bold">Mitra</th>
+          <th class="p-2.5 font-bold">Nama Inspector</th>
+          <th class="p-2.5 font-bold">Tanggal Inspeksi</th>
+          <th class="p-2.5 font-bold">Risk Level</th>
+          <th class="p-2.5 font-bold">Compliance</th>
+          ${showCulvertCols ? '<th class="p-2.5 font-bold text-center">Jumlah Line</th>' : ''}
+          ${showCulvertCols ? '<th class="p-2.5 font-bold">Prioritas</th>' : ''}
+        </tr>
+      `;
+    }
+
     function renderCulvertListTableRows() {
       const tbody = document.getElementById('dashboardTableBody');
       const emptyDiv = document.getElementById('dashTableEmpty');
       if (!tbody) return;
 
-      const isCulvert = (state.dashboardAssetType || 'culvert') === 'culvert';
-      const userContractor = state.user ? state.user.contractor : 'Semua';
-      const searchVal = (document.getElementById('clvListSearch') ? document.getElementById('clvListSearch').value : '').toLowerCase().trim();
-
-      const validMasterIds = new Set();
-      if (isCulvert) {
-        state.culverts.forEach(c => {
-          if (userContractor === 'Semua' || c.contractor === userContractor) {
-            validMasterIds.add(String(c.id || '').trim().toUpperCase());
-          }
-        });
-      } else {
-        state.channels.forEach(ch => {
-          if (userContractor === 'Semua' || ch.contractor === userContractor) {
-            validMasterIds.add(String(ch.id || '').trim().toUpperCase());
-          }
-        });
-      }
-
-      let list = state.inspections.filter(ins => {
-        const isChan = isChannelInspection(ins);
-        if (isCulvert && isChan) return false;
-        if (!isCulvert && !isChan) return false;
-
-        const assetId = String(ins.idCulvert || ins.id || '').trim().toUpperCase();
-        if (!validMasterIds.has(assetId)) return false;
-
-        if (userContractor !== 'Semua' && ins.contractor !== userContractor) return false;
-        return matchYearAndMonth(ins.date, state.masterFilters.year, state.masterFilters.month);
-      });
-
-      if (searchVal) {
-        list = list.filter(i => (i.idCulvert || i.id || '').toLowerCase().includes(searchVal));
-      }
-
-      list.sort((a, b) => {
-        const idA = (a.idCulvert || a.id || '').toLowerCase();
-        const idB = (b.idCulvert || b.id || '').toLowerCase();
-        if (idA < idB) return -1;
-        if (idA > idB) return 1;
-        return parseDateSafe(a.date) - parseDateSafe(b.date);
-      });
+      const list = getFilteredDirectoryInspections();
+      const assetFilter = state.masterFilters.asset || 'Semua';
+      const isChannelOnly = assetFilter === 'type_channel' || assetFilter.startsWith('chn_');
+      const showCulvertCols = !isChannelOnly;
 
       tbody.innerHTML = '';
       if (list.length === 0) {
@@ -3014,18 +3164,20 @@
           if (item.riskLevel === 'High') rClass = "bg-orange-100 text-orange-800 border border-orange-300";
           if (item.riskLevel === 'Critical') rClass = "bg-red-100 text-red-800 border border-red-300";
 
-          const priorityDisplay = isCulvert ? getCulvertPriority(item.idCulvert) : '-';
-          const lineCountDisplay = isCulvert ? getCulvertLineCount(item.idCulvert) : '-';
+          const isChan = isChannelInspection(item);
+          const priorityDisplay = !isChan ? getCulvertPriority(item.idCulvert) : '-';
+          const lineCountDisplay = !isChan ? getCulvertLineCount(item.idCulvert) : '-';
 
           const row = `
             <tr>
               <td class="p-2.5 font-bold font-mono text-gray-800">${item.idCulvert || item.id || '-'}</td>
               <td class="p-2.5 text-gray-600 font-semibold">${item.contractor || '-'}</td>
+              <td class="p-2.5 text-gray-700 font-semibold">${item.inspector || '-'}</td>
               <td class="p-2.5 font-mono text-gray-500">${item.date ? item.date.split(' ')[0] : '-'}</td>
               <td class="p-2.5"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${item.riskLevel || 'No Data'}</span></td>
               <td class="p-2.5 font-bold">${item.compliance !== undefined && item.compliance !== null ? item.compliance : 0}%</td>
-              ${isCulvert ? `<td class="p-2.5 text-center font-mono">${lineCountDisplay}</td>` : ''}
-              ${isCulvert ? `<td class="p-2.5 font-semibold text-rose-600">${priorityDisplay}</td>` : ''}
+              ${showCulvertCols ? `<td class="p-2.5 text-center font-mono">${lineCountDisplay}</td>` : ''}
+              ${showCulvertCols ? `<td class="p-2.5 font-semibold text-rose-600">${priorityDisplay}</td>` : ''}
             </tr>
           `;
           tbody.innerHTML += row;
@@ -3036,6 +3188,11 @@
     function searchCulvertListTable() {
       renderCulvertListTableRows();
     }
+
+    window.updateDirectoryTableHead = updateDirectoryTableHead;
+    window.renderCulvertListTableRows = renderCulvertListTableRows;
+    window.searchCulvertListTable = searchCulvertListTable;
+    window.downloadDirectoryCSV = downloadDirectoryCSV;
 
     function renderRiskChart(records) {
       const ctx = document.getElementById('riskChart');
@@ -4180,4 +4337,5 @@
     };
   </script>
 </body>
+
 </html>
