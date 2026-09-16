@@ -422,15 +422,19 @@
     <section id="section-dashboard" class="tab-section hidden">
       <div class="mb-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
         <div>
-          <h2 class="text-lg font-bold text-theme1 border-l-4 border-theme3 pl-3" id="dashboardTitle">Dashboard Culvert Inspection</h2>
-          <p class="text-xs text-gray-500 pl-3 mt-0.5" id="dashboardSubtitle">Menampilkan data inspeksi terakhir per titik objek</p>
+          <h2 class="text-lg font-bold text-theme1 border-l-4 border-theme3 pl-3" id="dashboardTitle">Dashboard Culvert
+            Inspection</h2>
+          <p class="text-xs text-gray-500 pl-3 mt-0.5" id="dashboardSubtitle">Menampilkan data inspeksi terakhir per
+            titik objek</p>
         </div>
         <!-- Segmented Switch: Culvert vs Channel -->
         <div class="inline-flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-inner">
-          <button id="btnDashCulvert" onclick="setDashboardAssetType('culvert')" class="px-4 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1.5 bg-theme1 text-white shadow-sm">
+          <button id="btnDashCulvert" onclick="setDashboardAssetType('culvert')"
+            class="px-4 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1.5 bg-theme1 text-white shadow-sm">
             <i class="ph ph-cube"></i> Culvert (Gorong-gorong)
           </button>
-          <button id="btnDashChannel" onclick="setDashboardAssetType('channel')" class="px-4 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1.5 text-gray-600 hover:text-theme1 bg-transparent">
+          <button id="btnDashChannel" onclick="setDashboardAssetType('channel')"
+            class="px-4 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1.5 text-gray-600 hover:text-theme1 bg-transparent">
             <i class="ph ph-git-commit"></i> Channel (Saluran Air)
           </button>
         </div>
@@ -444,11 +448,13 @@
             <i class="ph ph-cube text-theme2 group-hover:animate-bounce"></i> Total Culvert
           </h3>
           <p class="text-2xl font-bold font-mono" id="cardTotal">0</p>
-          <span class="text-[9px] text-theme3 font-semibold underline block mt-1" id="cardTotalSub">Klik untuk directory lengkap</span>
+          <span class="text-[9px] text-theme3 font-semibold underline block mt-1" id="cardTotalSub">Klik untuk directory
+            lengkap</span>
         </div>
 
         <div onclick="filterDashboardByRisk('Critical')"
-          class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-red-600 hover:bg-red-50 hover:bg-opacity-40 cursor-pointer transition shadow-sm hover:scale-[1.01] group" title="Klik untuk filter Critical di tabel">
+          class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-red-600 hover:bg-red-50 hover:bg-opacity-40 cursor-pointer transition shadow-sm hover:scale-[1.01] group"
+          title="Klik untuk filter Critical di tabel">
           <h3 class="text-[10px] text-red-600 font-bold uppercase flex items-center justify-between">
             <span>Critical Risk</span>
             <i class="ph ph-warning-circle text-xs group-hover:animate-bounce"></i>
@@ -457,7 +463,8 @@
           <span class="text-[9px] text-red-500 font-semibold underline block mt-1">Klik untuk filter tabel</span>
         </div>
         <div onclick="filterDashboardByTime('> 30 Hari')"
-          class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-orange-500 hover:bg-orange-50 hover:bg-opacity-40 cursor-pointer transition shadow-sm hover:scale-[1.01] group" title="Klik untuk filter > 30 Hari di tabel">
+          class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-orange-500 hover:bg-orange-50 hover:bg-opacity-40 cursor-pointer transition shadow-sm hover:scale-[1.01] group"
+          title="Klik untuk filter > 30 Hari di tabel">
           <h3 class="text-[10px] text-gray-500 font-bold uppercase flex items-center justify-between">
             <span>> 30 Hari Belum diinspeksi</span>
             <i class="ph ph-clock-countdown text-xs group-hover:animate-bounce"></i>
@@ -465,7 +472,8 @@
           <p class="text-2xl font-bold font-mono text-orange-500" id="cardOverdue">0</p>
           <span class="text-[9px] text-orange-500 font-semibold underline block mt-1">Klik untuk filter tabel</span>
         </div>
-        <div class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-emerald-600" id="cardPrio1Container">
+        <div class="bg-white rounded border border-gray-100 p-3 border-t-2 border-t-emerald-600"
+          id="cardPrio1Container">
           <h3 class="text-[10px] text-gray-500 font-bold uppercase flex items-center gap-1" id="cardPrio1Title">
             <i class="ph ph-check-circle text-emerald-600"></i> Titik Diinspeksi
           </h3>
@@ -491,7 +499,8 @@
           <div class="h-40 relative"><canvas id="timeChart"></canvas></div>
         </div>
         <div class="bg-white rounded border border-gray-100 p-3" id="prioChartCard">
-          <h3 class="text-xs font-bold text-center mb-2 text-theme1 flex items-center justify-center gap-1" id="prioChartTitle">
+          <h3 class="text-xs font-bold text-center mb-2 text-theme1 flex items-center justify-center gap-1"
+            id="prioChartTitle">
             <i class="ph ph-flag text-theme3"></i> Prioritas Culvert
             <span class="text-[10px] text-gray-400 font-normal">(Klik untuk filter)</span>
           </h3>
@@ -1072,22 +1081,50 @@
     }
 
     function calculateComplianceScore(payloadData, mitraType, objType) {
+      if (!payloadData) return 0;
       let indicators = [];
+
+      const parseVal = (v, isInverse = false) => {
+        if (v === undefined || v === null || v === '') return 0;
+        if (v === 1 || v === '1') return 1;
+        if (v === 0 || v === '0') return 0;
+        const s = String(v).trim().toLowerCase();
+        if (isInverse) {
+          return (s === 'tidak' || s === 'tidak ada' || s === 'no' || s === 'false') ? 1 : 0;
+        } else {
+          return (s === 'ada' || s === 'ya' || s === 'yes' || s === 'true') ? 1 : 0;
+        }
+      };
+
       if (mitraType === 'hauling') {
         indicators = [
-          payloadData.culvertPenyok, payloadData.culvertKeropos, payloadData.culvertKendaliErosi,
-          payloadData.culvertInfoLocation, payloadData.culvertInfoJmlLine, payloadData.culvertIfrasRambu
+          parseVal(payloadData.culvertPenyok, true),
+          parseVal(payloadData.culvertKeropos, true),
+          parseVal(payloadData.culvertKendaliErosi, false),
+          parseVal(payloadData.culvertInfoLocation, false),
+          parseVal(payloadData.culvertInfoJmlLine, false),
+          parseVal(payloadData.culvertIfrasRambu, false)
         ];
       } else {
         if (objType === 'culvert') {
           indicators = [
-            payloadData.culvertPenyok, payloadData.culvertKeropos, payloadData.culvertKendaliErosi,
-            payloadData.culvertInfoIDCulvert, payloadData.culvertInfoJmlLine, payloadData.culvertInfoDiameter,
-            payloadData.culvertTglMaintenance, payloadData.culvertInfoPIC, payloadData.culvertInfoLinkQRCode,
-            payloadData.culvertIfrasParkir, payloadData.culvertIfrasVisible, payloadData.culvertIfrasAccess, payloadData.culvertIfrasRambu
+            parseVal(payloadData.culvertPenyok, true),
+            parseVal(payloadData.culvertKeropos, true),
+            parseVal(payloadData.culvertKendaliErosi, false),
+            parseVal(payloadData.culvertInfoIDCulvert, false),
+            parseVal(payloadData.culvertInfoJmlLine, false),
+            parseVal(payloadData.culvertInfoDiameter, false),
+            parseVal(payloadData.culvertTglMaintenance, false),
+            parseVal(payloadData.culvertInfoPIC, false),
+            parseVal(payloadData.culvertInfoLinkQRCode, false),
+            parseVal(payloadData.culvertIfrasParkir, false),
+            parseVal(payloadData.culvertIfrasVisible, false),
+            parseVal(payloadData.culvertIfrasAccess, false),
+            parseVal(payloadData.culvertIfrasRambu, false)
           ];
         } else {
-          indicators = [payloadData.channelKendaliErosi !== undefined ? payloadData.channelKendaliErosi : payloadData.channelPenahanErosi];
+          const chanVal = payloadData.channelKendaliErosi !== undefined ? payloadData.channelKendaliErosi : payloadData.channelPenahanErosi;
+          indicators = [parseVal(chanVal, false)];
         }
       }
 
@@ -1320,16 +1357,17 @@
       }
 
       fields.forEach((field, index) => {
+        const isInverse = (field.key === 'culvertPenyok' || field.key === 'culvertKeropos');
         wrapper.innerHTML += `
           <div class="flex items-center justify-between bg-white p-2.5 rounded border border-gray-200 shadow-sm transition hover:shadow-md">
             <span class="font-semibold text-gray-700 text-[11px] leading-tight">${index + 1}. ${field.text}</span>
             <div class="flex items-center gap-1 shrink-0 ml-2">
               <label class="inline-flex items-center cursor-pointer">
-                <input type="radio" name="${field.key}" value="Ada" checked class="sr-only peer">
+                <input type="radio" name="${field.key}" value="Ada" ${!isInverse ? 'checked' : ''} class="sr-only peer">
                 <span class="px-3 py-1 bg-gray-100 text-gray-400 peer-checked:bg-emerald-600 peer-checked:text-white rounded text-[10px] font-bold transition">ADA</span>
               </label>
               <label class="inline-flex items-center cursor-pointer">
-                <input type="radio" name="${field.key}" value="Tidak" class="sr-only peer">
+                <input type="radio" name="${field.key}" value="Tidak" ${isInverse ? 'checked' : ''} class="sr-only peer">
                 <span class="px-3 py-1 bg-gray-100 text-gray-400 peer-checked:bg-rose-600 peer-checked:text-white rounded text-[10px] font-bold transition">TIDAK</span>
               </label>
             </div>
@@ -2093,12 +2131,10 @@
       complianceRadios.forEach(rad => {
         const isInverse = [
           'culvertPenyok',
-          'culvertKeropos',
-          'channelKendaliErosi',
-          'channelPenahanErosi'
+          'culvertKeropos'
         ].includes(rad.name);
 
-        const val = isInverse ? (rad.value === 'Tidak' || rad.value === 'Tidak Ada' ? '1' : '0') : (rad.value === 'Ada' ? '1' : '0');
+        const val = isInverse ? (rad.value === 'Tidak' || rad.value === 'Tidak Ada' ? '1' : '0') : (rad.value === 'Ada' || rad.value === 'Ya' ? '1' : '0');
         payload.data[rad.name] = val;
 
         if (rad.name === 'channelKendaliErosi') payload.data['channelPenahanErosi'] = val;
@@ -2534,8 +2570,8 @@
       }
       const subtitleEl = document.getElementById('dashboardSubtitle');
       if (subtitleEl) {
-        subtitleEl.innerText = isCulvert 
-          ? "Menampilkan data inspeksi terakhir per titik Gorong-gorong (Culvert)" 
+        subtitleEl.innerText = isCulvert
+          ? "Menampilkan data inspeksi terakhir per titik Gorong-gorong (Culvert)"
           : "Menampilkan data inspeksi terakhir per titik Saluran Air (Channel)";
       }
 
@@ -2830,7 +2866,7 @@
 
       if (mode === 'general') {
         const isCulvert = (state.dashboardAssetType || 'culvert') === 'culvert';
-        const activeRiskBadge = state.generalFilters.risiko !== 'Semua' 
+        const activeRiskBadge = state.generalFilters.risiko !== 'Semua'
           ? `<span class="bg-theme1 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">Filter Risiko: ${state.generalFilters.risiko} <button onclick="filterDashboardByRisk('${state.generalFilters.risiko}')" class="text-white hover:text-red-200" title="Hapus Filter">&times;</button></span>`
           : '';
         const activeTimeBadge = state.generalFilters.waktu !== 'Semua'
@@ -3222,7 +3258,7 @@
             },
             tooltip: {
               callbacks: {
-                label: function(context) {
+                label: function (context) {
                   return ` ${context.label}: ${context.raw} titik (Klik untuk filter)`;
                 }
               }
@@ -3268,7 +3304,7 @@
             legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
             tooltip: {
               callbacks: {
-                label: function(context) {
+                label: function (context) {
                   return ` ${context.label}: ${context.raw} titik (Klik untuk filter)`;
                 }
               }
@@ -3325,7 +3361,7 @@
               legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
               tooltip: {
                 callbacks: {
-                  label: function(context) {
+                  label: function (context) {
                     return ` ${context.label}: ${context.raw} titik (Klik untuk filter)`;
                   }
                 }
