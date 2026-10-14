@@ -1381,41 +1381,100 @@
       const userVal = document.getElementById('login_username').value.trim();
       const passVal = document.getElementById('login_password').value;
 
-      let roleVal = null;
-      let contractor = "Semua";
-      let mitraType = "mining";
+      if (!userVal || !passVal) {
+        Swal.fire({ icon: 'warning', title: 'Input Belum Lengkap', text: 'Username dan Password wajib diisi!' });
+        return;
+      }
 
-      if (userVal === "adaroculvert" && passVal === "adaro$123") {
-        roleVal = "ADARO INDONESIA";
-        contractor = "ADARO INDONESIA";
-        mitraType = 'hauling';
+      Swal.fire({
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      let authData = null;
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
+          body: JSON.stringify({
+            action: 'login',
+            username: userVal,
+            password: passVal
+          })
+        });
+
+        if (response.ok) {
+          const resJson = await response.json();
+          if (resJson && resJson.status === 'success') {
+            authData = resJson.data || resJson.user;
+          } else if (resJson && resJson.status === 'error') {
+            Swal.fire({
+              icon: 'error',
+              title: 'Login Gagal',
+              text: resJson.message ? resJson.message.replace(/^Error:\s*/, '') : 'Kombinasi username atau password salah!'
+            });
+            return;
+          }
+        }
+      } catch (postErr) {
+        console.warn("POST login terkendala redirect/CORS, mencoba metode GET...", postErr);
       }
-      else if (userVal === "bumaculvert" && passVal === "buma@123") {
-        roleVal = "BUMA";
-        contractor = "BUMA";
-        mitraType = 'mining';
+
+      // Fallback via GET jika POST terhalang pengaturan redirect browser
+      if (!authData) {
+        try {
+          const getUrl = `${API_URL}?action=login&username=${encodeURIComponent(userVal)}&password=${encodeURIComponent(passVal)}&_t=${Date.now()}`;
+          const getRes = await fetch(getUrl, {
+            method: 'GET',
+            cache: 'no-store',
+            redirect: 'follow'
+          });
+
+          if (getRes.ok) {
+            const resJson = await getRes.json();
+            if (resJson && resJson.status === 'success') {
+              authData = resJson.data || resJson.user;
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Login Gagal',
+                text: (resJson && resJson.message) ? resJson.message.replace(/^Error:\s*/, '') : 'Kombinasi username atau password salah!'
+              });
+              return;
+            }
+          } else {
+            throw new Error(`HTTP ${getRes.status}`);
+          }
+        } catch (getErr) {
+          console.error("Gagal verifikasi login ke server backend:", getErr);
+          Swal.fire({
+            icon: 'error',
+            title: 'Gangguan Server',
+            text: 'Gagal terhubung ke backend untuk verifikasi akun. Pastikan Anda terhubung ke internet dan URL backend aktif.'
+          });
+          return;
+        }
       }
-      else if (userVal === "sisculvert" && passVal === "sis!123") {
-        roleVal = "SIS";
-        contractor = "SIS";
-        mitraType = 'mining';
-      }
-      else if (userVal === "ppaculvert" && passVal === "ppa#123") {
-        roleVal = "PPA";
-        contractor = "PPA";
-        mitraType = 'mining';
-      }
-      else if (userVal === "admin" && passVal === "admin1234!!!") {
-        roleVal = "ADMIN";
-        contractor = "Semua";
-        mitraType = 'admin';
-      }
-      else {
+
+      if (!authData) {
         Swal.fire({ icon: 'error', title: 'Login Gagal', text: 'Kombinasi username atau password salah!' });
         return;
       }
 
-      state.user = { username: userVal, role: roleVal, contractor: contractor, mitraType: mitraType };
+      const roleVal = authData.role;
+      const contractor = authData.contractor;
+      const mitraType = authData.mitraType;
+
+      state.user = {
+        username: authData.username || userVal,
+        role: roleVal,
+        contractor: contractor,
+        mitraType: mitraType
+      };
 
       const rememberChk = document.getElementById('login_remember');
       if (rememberChk && rememberChk.checked) {
@@ -1427,12 +1486,6 @@
       localStorage.setItem('clv_active_tab', 'home');
 
       applyUserSession(state.user);
-
-      Swal.fire({
-        title: 'Mempersiapkan Sistem',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-      });
 
       await loadSheetsAPIData();
       await loadLiveInspections();
@@ -4262,14 +4315,52 @@
             showCancelButton: true,
             confirmButtonColor: '#1B4332',
             cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Buka Admin',
-            cancelButtonText: 'Batal',
-            preConfirm: (pass) => {
-              if (pass !== '8080') {
-                Swal.showValidationMessage('Password admin salah!');
+            showLoaderOnConfirm: true,
+            preConfirm: async (pass) => {
+              const cleanPass = String(pass || '').trim();
+              if (!cleanPass) {
+                Swal.showValidationMessage('Password admin wajib diisi!');
                 return false;
               }
-              return true;
+
+              try {
+                let verifyOk = false;
+                try {
+                  const res = await fetch(API_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'verifyAdminPassword', password: cleanPass })
+                  });
+                  if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.status === 'success') verifyOk = true;
+                  }
+                } catch (postErr) {
+                  console.warn("POST verify admin gagal, mencoba GET...", postErr);
+                }
+
+                if (!verifyOk) {
+                  const getRes = await fetch(`${API_URL}?action=verifyAdminPassword&password=${encodeURIComponent(cleanPass)}&_t=${Date.now()}`, {
+                    method: 'GET',
+                    cache: 'no-store',
+                    redirect: 'follow'
+                  });
+                  if (getRes.ok) {
+                    const data = await getRes.json();
+                    if (data && data.status === 'success') verifyOk = true;
+                  }
+                }
+
+                if (!verifyOk) {
+                  Swal.showValidationMessage('Password admin salah!');
+                  return false;
+                }
+                return true;
+              } catch (err) {
+                Swal.showValidationMessage('Gagal terhubung ke server untuk verifikasi!');
+                return false;
+              }
             }
           }).then((result) => {
             if (result.isConfirmed) {
