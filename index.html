@@ -96,7 +96,7 @@
           <label class="flex items-center text-xs font-semibold text-gray-600 cursor-pointer select-none">
             <input type="checkbox" id="login_remember"
               class="rounded text-theme2 focus:ring-theme2 mr-1.5 h-3.5 w-3.5 accent-[#1B4332]">
-            Simpan ID & Password
+            Simpan ID
           </label>
         </div>
         <button type="submit"
@@ -913,6 +913,17 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxM9hdz3VgsBafX4EB-RxPDhl-iFnYf3sLgbGOwjtzIp-1SP5Q79xYjgCUYpVQmKH7Q/exec";
 
+    // Sanitizer Utility untuk Mencegah Stored XSS (Finding 2)
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     let state = {
       inspectors: JSON.parse(localStorage.getItem('clv_inspectors')) || [
         { name: "Andi Saputra", nrp: "8821092", contractor: "BUMA" },
@@ -1449,44 +1460,13 @@
           }
         }
       } catch (postErr) {
-        console.warn("POST login terkendala redirect/CORS, mencoba metode GET...", postErr);
-      }
-
-      // Fallback via GET jika POST terhalang pengaturan redirect browser
-      if (!authData) {
-        try {
-          const getUrl = `${API_URL}?action=login&username=${encodeURIComponent(userVal)}&password=${encodeURIComponent(passVal)}&_t=${Date.now()}`;
-          const getRes = await fetch(getUrl, {
-            method: 'GET',
-            cache: 'no-store',
-            redirect: 'follow'
-          });
-
-          if (getRes.ok) {
-            const resJson = await getRes.json();
-            if (resJson && resJson.status === 'success') {
-              authData = resJson.data || resJson.user;
-              authToken = resJson.token || (authData && authData.token) || null;
-            } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'Login Gagal',
-                text: (resJson && resJson.message) ? resJson.message.replace(/^Error:\s*/, '') : 'Kombinasi username atau password salah!'
-              });
-              return;
-            }
-          } else {
-            throw new Error(`HTTP ${getRes.status}`);
-          }
-        } catch (getErr) {
-          console.error("Gagal verifikasi login ke server backend:", getErr);
-          Swal.fire({
-            icon: 'error',
-            title: 'Gangguan Server',
-            text: 'Gagal terhubung ke backend untuk verifikasi akun. Pastikan Anda terhubung ke internet dan URL backend aktif.'
-          });
-          return;
-        }
+        console.error("Gagal verifikasi login ke server backend:", postErr);
+        Swal.fire({
+          icon: 'error',
+          title: 'Gangguan Server',
+          text: 'Gagal terhubung ke backend untuk verifikasi akun. Pastikan Anda terhubung ke internet dan URL backend aktif.'
+        });
+        return;
       }
 
       if (!authData) {
@@ -1511,12 +1491,14 @@
         localStorage.setItem('clv_user_token', authToken);
       }
 
+      // Finding 5: Hanya simpan username ke localStorage (JANGAN simpan plaintext password!)
       const rememberChk = document.getElementById('login_remember');
       if (rememberChk && rememberChk.checked) {
-        localStorage.setItem('clv_saved_creds', JSON.stringify({ username: userVal, password: passVal }));
+        localStorage.setItem('clv_saved_username', userVal);
       } else {
-        localStorage.removeItem('clv_saved_creds');
+        localStorage.removeItem('clv_saved_username');
       }
+      localStorage.removeItem('clv_saved_creds'); // Hapus residu plaintext lama demi keamanan
       localStorage.setItem('clv_user_session', JSON.stringify(state.user));
       localStorage.setItem('clv_active_tab', 'home');
 
@@ -1641,10 +1623,12 @@
       document.getElementById('login-section').classList.remove('hidden');
       document.body.classList.add('no-scroll');
 
-      const savedCreds = JSON.parse(localStorage.getItem('clv_saved_creds'));
-      if (savedCreds) {
-        document.getElementById('login_username').value = savedCreds.username || '';
-        document.getElementById('login_password').value = savedCreds.password || '';
+      // Finding 5: Muat username tersimpan (password tidak pernah disimpan di storage)
+      const savedUser = localStorage.getItem('clv_saved_username') || (JSON.parse(localStorage.getItem('clv_saved_creds') || '{}').username) || '';
+      localStorage.removeItem('clv_saved_creds');
+      if (savedUser) {
+        document.getElementById('login_username').value = savedUser;
+        document.getElementById('login_password').value = '';
         const remChk = document.getElementById('login_remember');
         if (remChk) remChk.checked = true;
       } else {
@@ -1710,10 +1694,10 @@
         item.dataset.index = idx;
         item.innerHTML = `
           <div class="flex flex-col">
-            <span class="font-bold text-gray-800">${ins.name}</span>
-            <span class="text-[10px] text-gray-500 font-mono">NRP: ${ins.nrp}</span>
+            <span class="font-bold text-gray-800">${escapeHtml(ins.name)}</span>
+            <span class="text-[10px] text-gray-500 font-mono">NRP: ${escapeHtml(ins.nrp)}</span>
           </div>
-          <span class="text-[10px] bg-theme1 text-white font-mono px-1.5 py-0.5 rounded font-semibold">${ins.contractor}</span>
+          <span class="text-[10px] bg-theme1 text-white font-mono px-1.5 py-0.5 rounded font-semibold">${escapeHtml(ins.contractor)}</span>
         `;
         item.onmousedown = (e) => {
           e.preventDefault();
@@ -1893,25 +1877,25 @@
         item.dataset.index = idx;
 
         if (objType === 'culvert') {
-          const prio = itemObj.priority ? `${itemObj.priority}` : '';
+          const prio = itemObj.priority ? `${escapeHtml(itemObj.priority)}` : '';
           const prioBadge = prio ? `<span class="text-[9px] bg-rose-100 text-rose-700 font-bold px-1.5 py-0.5 rounded ml-1">${prio}</span>` : '';
           item.innerHTML = `
             <div class="flex flex-col">
               <div class="flex items-center">
-                <span class="font-bold text-theme1">${itemObj.id}</span>
+                <span class="font-bold text-theme1">${escapeHtml(itemObj.id)}</span>
                 ${prioBadge}
               </div>
-              <span class="text-[10px] text-gray-500 font-medium">${itemObj.location || 'Area'}</span>
+              <span class="text-[10px] text-gray-500 font-medium">${escapeHtml(itemObj.location || 'Area')}</span>
             </div>
-            <span class="text-[10px] bg-theme1 text-white font-mono px-1.5 py-0.5 rounded font-semibold">${itemObj.contractor}</span>
+            <span class="text-[10px] bg-theme1 text-white font-mono px-1.5 py-0.5 rounded font-semibold">${escapeHtml(itemObj.contractor)}</span>
           `;
         } else {
           item.innerHTML = `
             <div class="flex flex-col">
-              <span class="font-bold text-theme1">${itemObj.id}</span>
-              <span class="text-[10px] text-gray-500 font-medium">${itemObj.contractor}</span>
+              <span class="font-bold text-theme1">${escapeHtml(itemObj.id)}</span>
+              <span class="text-[10px] text-gray-500 font-medium">${escapeHtml(itemObj.contractor)}</span>
             </div>
-            <span class="text-[10px] bg-theme1 text-white font-mono px-1.5 py-0.5 rounded font-semibold">${itemObj.contractor}</span>
+            <span class="text-[10px] bg-theme1 text-white font-mono px-1.5 py-0.5 rounded font-semibold">${escapeHtml(itemObj.contractor)}</span>
           `;
         }
 
@@ -3038,14 +3022,14 @@
             if (rec.riskLevel === 'High') rClass = "bg-orange-100 text-orange-800 border border-orange-300";
             if (rec.riskLevel === 'Critical') rClass = "bg-red-100 text-red-800 border border-red-300";
 
-            const photoInletBtn = rec.fileInlet ? `<button type="button" onclick="viewMediaMockup('${rec.fileInlet}')" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
-            const photoOutletBtn = rec.fileOutlet ? `<button type="button" onclick="viewMediaMockup('${rec.fileOutlet}')" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
-            const photoOtherBtn = rec.fileOther ? `<button type="button" onclick="viewMediaMockup('${rec.fileOther}')" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
+            const photoInletBtn = rec.fileInlet ? `<button type="button" onclick="viewMediaMockup(this.dataset.url)" data-url="${escapeHtml(rec.fileInlet)}" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
+            const photoOutletBtn = rec.fileOutlet ? `<button type="button" onclick="viewMediaMockup(this.dataset.url)" data-url="${escapeHtml(rec.fileOutlet)}" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
+            const photoOtherBtn = rec.fileOther ? `<button type="button" onclick="viewMediaMockup(this.dataset.url)" data-url="${escapeHtml(rec.fileOther)}" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
 
             const priorityDisplay = isCulvert ? getCulvertPriority(rec.idCulvert) : '-';
             const lineCountDisplay = isCulvert ? getCulvertLineCount(rec.idCulvert) : '-';
 
-            const complianceDisplay = rec.compliance !== undefined && rec.compliance !== null ? `${rec.compliance}%` : '0%';
+            const complianceDisplay = rec.compliance !== undefined && rec.compliance !== null ? `${parseInt(rec.compliance)}%` : '0%';
             let compBadgeClass = "text-red-600 bg-red-50";
             if (rec.compliance >= 80) compBadgeClass = "text-emerald-600 bg-emerald-50";
             else if (rec.compliance >= 50) compBadgeClass = "text-amber-600 bg-amber-50";
@@ -3053,16 +3037,16 @@
             const row = `
               <tr>
                 <td class="p-2.5 font-bold font-mono text-gray-700">
-                  <button onclick="viewCulvertHistory('${rec.idCulvert}')" class="text-theme2 hover:text-theme4 font-bold flex items-center gap-1 text-left transition hover:underline focus:outline-none">
-                    <i class="ph ph-clock-counter-clockwise"></i> ${rec.idCulvert}
+                  <button onclick="viewCulvertHistory(this.dataset.id)" data-id="${escapeHtml(rec.idCulvert)}" class="text-theme2 hover:text-theme4 font-bold flex items-center gap-1 text-left transition hover:underline focus:outline-none">
+                    <i class="ph ph-clock-counter-clockwise"></i> ${escapeHtml(rec.idCulvert)}
                   </button>
                 </td>
-                <td class="p-2.5 text-gray-600 font-semibold">${rec.contractor}</td>
-                <td class="p-2.5 font-mono text-[11px] text-gray-500">${rec.date ? rec.date.split(' ')[0] : '-'}</td>
-                <td class="p-2.5"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${rec.riskLevel}</span></td>
-                <td class="p-2.5 font-semibold text-gray-600">${rec.lastCheckCategory}</td>
-                ${isCulvert ? `<td class="p-2.5"><span class="font-bold ${priorityDisplay !== '-' ? 'text-rose-600' : 'text-gray-400'}">${priorityDisplay}</span></td>` : ''}
-                ${isCulvert ? `<td class="p-2.5 text-center font-mono text-gray-600">${lineCountDisplay}</td>` : ''}
+                <td class="p-2.5 text-gray-600 font-semibold">${escapeHtml(rec.contractor)}</td>
+                <td class="p-2.5 font-mono text-[11px] text-gray-500">${escapeHtml(rec.date ? rec.date.split(' ')[0] : '-')}</td>
+                <td class="p-2.5"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${escapeHtml(rec.riskLevel)}</span></td>
+                <td class="p-2.5 font-semibold text-gray-600">${escapeHtml(rec.lastCheckCategory)}</td>
+                ${isCulvert ? `<td class="p-2.5"><span class="font-bold ${priorityDisplay !== '-' ? 'text-rose-600' : 'text-gray-400'}">${escapeHtml(priorityDisplay)}</span></td>` : ''}
+                ${isCulvert ? `<td class="p-2.5 text-center font-mono text-gray-600">${escapeHtml(lineCountDisplay)}</td>` : ''}
                 <td class="p-2.5 text-center font-bold text-xs"><span class="px-2 py-1 rounded ${compBadgeClass}">${complianceDisplay}</span></td>
                 <td class="p-2.5 text-center">${photoInletBtn}</td>
                 <td class="p-2.5 text-center">${photoOutletBtn}</td>
@@ -3193,7 +3177,7 @@
                 <i class="ph ph-arrow-left"></i> Kembali
               </button>
               <h4 class="font-bold text-theme1 text-sm flex items-center gap-2">
-                <i class="ph ph-clock-counter-clockwise text-theme3"></i> Histori Inspeksi: <span class="font-mono text-base text-emerald-700">${id}</span>
+                <i class="ph ph-clock-counter-clockwise text-theme3"></i> Histori Inspeksi: <span class="font-mono text-base text-emerald-700">${escapeHtml(id)}</span>
               </h4>
             </div>
           </div>
@@ -3224,17 +3208,17 @@
             if (rec.riskLevel === 'High') rClass = "bg-orange-100 text-orange-800 border border-orange-300";
             if (rec.riskLevel === 'Critical') rClass = "bg-red-100 text-red-800 border border-red-300";
 
-            const photoInletBtn = rec.fileInlet ? `<button type="button" onclick="viewMediaMockup('${rec.fileInlet}')" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
-            const photoOutletBtn = rec.fileOutlet ? `<button type="button" onclick="viewMediaMockup('${rec.fileOutlet}')" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
-            const photoOtherBtn = rec.fileOther ? `<button type="button" onclick="viewMediaMockup('${rec.fileOther}')" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
+            const photoInletBtn = rec.fileInlet ? `<button type="button" onclick="viewMediaMockup(this.dataset.url)" data-url="${escapeHtml(rec.fileInlet)}" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
+            const photoOutletBtn = rec.fileOutlet ? `<button type="button" onclick="viewMediaMockup(this.dataset.url)" data-url="${escapeHtml(rec.fileOutlet)}" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
+            const photoOtherBtn = rec.fileOther ? `<button type="button" onclick="viewMediaMockup(this.dataset.url)" data-url="${escapeHtml(rec.fileOther)}" class="text-theme2 hover:text-theme4 transition inline-block p-1" title="Lihat Foto"><i class="ph ph-image text-lg"></i></button>` : `<span class="text-gray-300">-</span>`;
 
-            const complianceDisplay = rec.compliance !== undefined && rec.compliance !== null ? `${rec.compliance}%` : '0%';
+            const complianceDisplay = rec.compliance !== undefined && rec.compliance !== null ? `${parseInt(rec.compliance)}%` : '0%';
 
             const row = `
               <tr>
-                <td class="p-2.5 font-mono text-gray-700 font-semibold">${rec.date || '-'}</td>
-                <td class="p-2.5 text-gray-700 font-semibold">${rec.inspector || '-'}</td>
-                <td class="p-2.5"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${rec.riskLevel}</span></td>
+                <td class="p-2.5 font-mono text-gray-700 font-semibold">${escapeHtml(rec.date || '-')}</td>
+                <td class="p-2.5 text-gray-700 font-semibold">${escapeHtml(rec.inspector || '-')}</td>
+                <td class="p-2.5"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${escapeHtml(rec.riskLevel)}</span></td>
                 <td class="p-2.5 text-center font-bold">${complianceDisplay}</td>
                 <td class="p-2.5 text-center">${photoInletBtn}</td>
                 <td class="p-2.5 text-center">${photoOutletBtn}</td>
@@ -3298,14 +3282,14 @@
 
           const row = `
             <tr>
-              <td class="p-2.5 font-bold font-mono text-gray-800">${item.idCulvert || item.id || '-'}</td>
-              <td class="p-2.5 text-gray-600 font-semibold">${item.contractor || '-'}</td>
-              <td class="p-2.5 text-gray-700 font-semibold">${item.inspector || '-'}</td>
-              <td class="p-2.5 font-mono text-gray-500">${item.date ? item.date.split(' ')[0] : '-'}</td>
-              <td class="p-2.5"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${item.riskLevel || 'No Data'}</span></td>
-              <td class="p-2.5 font-bold">${item.compliance !== undefined && item.compliance !== null ? item.compliance : 0}%</td>
-              ${showCulvertCols ? `<td class="p-2.5 text-center font-mono">${lineCountDisplay}</td>` : ''}
-              ${showCulvertCols ? `<td class="p-2.5 font-semibold text-rose-600">${priorityDisplay}</td>` : ''}
+              <td class="p-2.5 font-bold font-mono text-gray-800">${escapeHtml(item.idCulvert || item.id || '-')}</td>
+              <td class="p-2.5 text-gray-600 font-semibold">${escapeHtml(item.contractor || '-')}</td>
+              <td class="p-2.5 text-gray-700 font-semibold">${escapeHtml(item.inspector || '-')}</td>
+              <td class="p-2.5 font-mono text-gray-500">${escapeHtml(item.date ? item.date.split(' ')[0] : '-')}</td>
+              <td class="p-2.5"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] ${rClass}">${escapeHtml(item.riskLevel || 'No Data')}</span></td>
+              <td class="p-2.5 font-bold">${item.compliance !== undefined && item.compliance !== null ? parseInt(item.compliance) : 0}%</td>
+              ${showCulvertCols ? `<td class="p-2.5 text-center font-mono">${escapeHtml(lineCountDisplay)}</td>` : ''}
+              ${showCulvertCols ? `<td class="p-2.5 font-semibold text-rose-600">${escapeHtml(priorityDisplay)}</td>` : ''}
             </tr>
           `;
           tbody.innerHTML += row;
@@ -3528,13 +3512,13 @@
       } else {
         filteredIns.forEach(ins => {
           const actionTd = userRole === 'admin'
-            ? `<td class="p-2 text-center"><button onclick="deleteMasterItem('inspector', '${ins.nrp}')" class="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-0.5 rounded border border-red-200 bg-red-50"><i class="ph ph-trash"></i> Hapus</button></td>`
-            : `<td class="p-2 text-center"><button onclick="editMasterItem('inspector', '${ins.nrp}')" class="text-amber-600 hover:text-amber-800 text-xs font-bold px-2 py-0.5 rounded border border-amber-200 bg-amber-50 flex items-center justify-center gap-1 mx-auto shadow-sm"><i class="ph ph-note-pencil"></i> Edit</button></td>`;
+            ? `<td class="p-2 text-center"><button onclick="deleteMasterItem('inspector', this.dataset.id)" data-id="${escapeHtml(ins.nrp)}" class="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-0.5 rounded border border-red-200 bg-red-50"><i class="ph ph-trash"></i> Hapus</button></td>`
+            : `<td class="p-2 text-center"><button onclick="editMasterItem('inspector', this.dataset.id)" data-id="${escapeHtml(ins.nrp)}" class="text-amber-600 hover:text-amber-800 text-xs font-bold px-2 py-0.5 rounded border border-amber-200 bg-amber-50 flex items-center justify-center gap-1 mx-auto shadow-sm"><i class="ph ph-note-pencil"></i> Edit</button></td>`;
           insBody.innerHTML += `
             <tr>
-              <td class="p-2 font-bold text-gray-800">${ins.name}</td>
-              <td class="p-2 font-mono text-gray-600">${ins.nrp}</td>
-              <td class="p-2 font-semibold text-emerald-800">${ins.contractor}</td>
+              <td class="p-2 font-bold text-gray-800">${escapeHtml(ins.name)}</td>
+              <td class="p-2 font-mono text-gray-600">${escapeHtml(ins.nrp)}</td>
+              <td class="p-2 font-semibold text-emerald-800">${escapeHtml(ins.contractor)}</td>
               ${actionTd}
             </tr>
           `;
@@ -3563,19 +3547,19 @@
       } else {
         filteredClv.forEach(clv => {
           const actionTd = userRole === 'admin'
-            ? `<td class="p-2 text-center"><button onclick="deleteMasterItem('culvert', '${clv.id}')" class="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-0.5 rounded border border-red-200 bg-red-50"><i class="ph ph-trash"></i> Hapus</button></td>`
-            : `<td class="p-2 text-center"><button onclick="editMasterItem('culvert', '${clv.id}')" class="text-amber-600 hover:text-amber-800 text-xs font-bold px-2 py-0.5 rounded border border-amber-200 bg-amber-50 flex items-center justify-center gap-1 mx-auto shadow-sm"><i class="ph ph-note-pencil"></i> Edit</button></td>`;
+            ? `<td class="p-2 text-center"><button onclick="deleteMasterItem('culvert', this.dataset.id)" data-id="${escapeHtml(clv.id)}" class="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-0.5 rounded border border-red-200 bg-red-50"><i class="ph ph-trash"></i> Hapus</button></td>`
+            : `<td class="p-2 text-center"><button onclick="editMasterItem('culvert', this.dataset.id)" data-id="${escapeHtml(clv.id)}" class="text-amber-600 hover:text-amber-800 text-xs font-bold px-2 py-0.5 rounded border border-amber-200 bg-amber-50 flex items-center justify-center gap-1 mx-auto shadow-sm"><i class="ph ph-note-pencil"></i> Edit</button></td>`;
           const prioText = clv.priority || '-';
           clvBody.innerHTML += `
             <tr>
-              <td class="p-2 font-bold font-mono text-gray-800">${clv.id}</td>
-              <td class="p-2 text-gray-600">${clv.location || '-'}</td>
-              <td class="p-2 font-mono text-gray-500">${clv.coordinates ? clv.coordinates[0] : '-'}</td>
-              <td class="p-2 font-mono text-gray-500">${clv.coordinates ? clv.coordinates[1] : '-'}</td>
-              <td class="p-2 text-center font-bold font-mono text-emerald-700">${clv.jml_line || '-'}</td>
-              <td class="p-2 font-semibold text-rose-600">${prioText}</td>
-              <td class="p-2 font-semibold text-emerald-800">${clv.contractor}</td>
-              <td class="p-2 font-mono text-xs uppercase">${clv.type || 'inlet'}</td>
+              <td class="p-2 font-bold font-mono text-gray-800">${escapeHtml(clv.id)}</td>
+              <td class="p-2 text-gray-600">${escapeHtml(clv.location || '-')}</td>
+              <td class="p-2 font-mono text-gray-500">${escapeHtml(clv.coordinates ? clv.coordinates[0] : '-')}</td>
+              <td class="p-2 font-mono text-gray-500">${escapeHtml(clv.coordinates ? clv.coordinates[1] : '-')}</td>
+              <td class="p-2 text-center font-bold font-mono text-emerald-700">${escapeHtml(clv.jml_line || '-')}</td>
+              <td class="p-2 font-semibold text-rose-600">${escapeHtml(prioText)}</td>
+              <td class="p-2 font-semibold text-emerald-800">${escapeHtml(clv.contractor)}</td>
+              <td class="p-2 font-mono text-xs uppercase">${escapeHtml(clv.type || 'inlet')}</td>
               ${actionTd}
             </tr>
           `;
@@ -3602,12 +3586,12 @@
       } else {
         filteredChn.forEach(chn => {
           const actionTd = userRole === 'admin'
-            ? `<td class="p-2 text-center"><button onclick="deleteMasterItem('channel', '${chn.id}')" class="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-0.5 rounded border border-red-200 bg-red-50"><i class="ph ph-trash"></i> Hapus</button></td>`
-            : `<td class="p-2 text-center"><button onclick="editMasterItem('channel', '${chn.id}')" class="text-amber-600 hover:text-amber-800 text-xs font-bold px-2 py-0.5 rounded border border-amber-200 bg-amber-50 flex items-center justify-center gap-1 mx-auto shadow-sm"><i class="ph ph-note-pencil"></i> Edit</button></td>`;
+            ? `<td class="p-2 text-center"><button onclick="deleteMasterItem('channel', this.dataset.id)" data-id="${escapeHtml(chn.id)}" class="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-0.5 rounded border border-red-200 bg-red-50"><i class="ph ph-trash"></i> Hapus</button></td>`
+            : `<td class="p-2 text-center"><button onclick="editMasterItem('channel', this.dataset.id)" data-id="${escapeHtml(chn.id)}" class="text-amber-600 hover:text-amber-800 text-xs font-bold px-2 py-0.5 rounded border border-amber-200 bg-amber-50 flex items-center justify-center gap-1 mx-auto shadow-sm"><i class="ph ph-note-pencil"></i> Edit</button></td>`;
           chnBody.innerHTML += `
             <tr>
-              <td class="p-2 font-bold font-mono text-gray-800">${chn.id}</td>
-              <td class="p-2 font-semibold text-emerald-800">${chn.contractor}</td>
+              <td class="p-2 font-bold font-mono text-gray-800">${escapeHtml(chn.id)}</td>
+              <td class="p-2 font-semibold text-emerald-800">${escapeHtml(chn.contractor)}</td>
               ${actionTd}
             </tr>
           `;
@@ -4010,7 +3994,7 @@
         openMasterModal('inspector');
         const editIdInput = document.getElementById('mgmt_edit_id');
         if (editIdInput) editIdInput.value = String(ins.nrp || '').trim();
-        document.getElementById('modalPanelTitle').innerHTML = `<i class="ph ph-note-pencil mr-1 text-emerald-400"></i> Edit Data Inspector [${ins.nrp}]`;
+        document.getElementById('modalPanelTitle').innerHTML = `<i class="ph ph-note-pencil mr-1 text-emerald-400"></i> Edit Data Inspector [${escapeHtml(ins.nrp)}]`;
         document.getElementById('ins_nama').value = ins.name || '';
         document.getElementById('ins_nrp').value = ins.nrp || '';
         const insMitra = document.getElementById('ins_mitra');
@@ -4022,7 +4006,7 @@
         openMasterModal('culvert');
         const editIdInput = document.getElementById('mgmt_edit_id');
         if (editIdInput) editIdInput.value = String(clv.id || '').trim();
-        document.getElementById('modalPanelTitle').innerHTML = `<i class="ph ph-note-pencil mr-1 text-emerald-400"></i> Edit Data Culvert [${clv.id}]`;
+        document.getElementById('modalPanelTitle').innerHTML = `<i class="ph ph-note-pencil mr-1 text-emerald-400"></i> Edit Data Culvert [${escapeHtml(clv.id)}]`;
         document.getElementById('clv_id').value = clv.id || '';
         document.getElementById('clv_lokasi').value = clv.location || '';
         document.getElementById('clv_lat').value = (clv.coordinates && clv.coordinates[0] !== undefined) ? clv.coordinates[0] : '';
@@ -4039,7 +4023,7 @@
         openMasterModal('channel');
         const editIdInput = document.getElementById('mgmt_edit_id');
         if (editIdInput) editIdInput.value = String(chn.id || '').trim();
-        document.getElementById('modalPanelTitle').innerHTML = `<i class="ph ph-note-pencil mr-1 text-emerald-400"></i> Edit Data Channel [${chn.id}]`;
+        document.getElementById('modalPanelTitle').innerHTML = `<i class="ph ph-note-pencil mr-1 text-emerald-400"></i> Edit Data Channel [${escapeHtml(chn.id)}]`;
         document.getElementById('chn_id').value = chn.id || '';
         const chnPerusahaan = document.getElementById('chn_perusahaan');
         if (chnPerusahaan) chnPerusahaan.value = chn.contractor || (state.user ? state.user.contractor : 'BUMA');
@@ -4434,23 +4418,11 @@
                     if (data && data.status === 'success') verifyOk = true;
                   }
                 } catch (postErr) {
-                  console.warn("POST verify admin gagal, mencoba GET...", postErr);
+                  console.error("POST verify admin gagal:", postErr);
                 }
 
                 if (!verifyOk) {
-                  const getRes = await fetch(`${API_URL}?action=verifyAdminPassword&token=${encodeURIComponent(state.token || '')}&password=${encodeURIComponent(cleanPass)}&_t=${Date.now()}`, {
-                    method: 'GET',
-                    cache: 'no-store',
-                    redirect: 'follow'
-                  });
-                  if (getRes.ok) {
-                    const data = await getRes.json();
-                    if (data && data.status === 'success') verifyOk = true;
-                  }
-                }
-
-                if (!verifyOk) {
-                  Swal.showValidationMessage('Password admin salah!');
+                  Swal.showValidationMessage('Password admin salah atau gagal diverifikasi!');
                   return false;
                 }
                 return true;
@@ -4511,14 +4483,13 @@
       window.addEventListener('online', syncOfflineBanners);
       window.addEventListener('offline', syncOfflineBanners);
 
-      // Restore saved credentials if "Simpan ID & Password" was checked
-      const savedCreds = JSON.parse(localStorage.getItem('clv_saved_creds'));
-      if (savedCreds) {
+      // Restore saved username if "Simpan ID & Password" was checked (Finding 5: No plaintext password stored)
+      const savedUser = localStorage.getItem('clv_saved_username') || (JSON.parse(localStorage.getItem('clv_saved_creds') || '{}').username) || '';
+      localStorage.removeItem('clv_saved_creds'); // Bersihkan plaintext lama
+      if (savedUser) {
         const uInput = document.getElementById('login_username');
-        const pInput = document.getElementById('login_password');
         const remChk = document.getElementById('login_remember');
-        if (uInput) uInput.value = savedCreds.username || '';
-        if (pInput) pInput.value = savedCreds.password || '';
+        if (uInput) uInput.value = savedUser;
         if (remChk) remChk.checked = true;
       }
 
