@@ -1233,7 +1233,7 @@
       Swal.fire({
         icon: 'warning',
         title: 'Sesi Telah Berakhir',
-        text: 'Sesi login Anda telah berakhir demi keamanan data. Silakan login kembali.'
+        text: 'Sesi login Anda telah berakhir. Silakan login kembali.'
       });
     }
 
@@ -2943,13 +2943,13 @@
       if (mode === 'general') {
         const isCulvert = (state.dashboardAssetType || 'culvert') === 'culvert';
         const activeRiskBadge = state.generalFilters.risiko !== 'Semua'
-          ? `<span class="bg-theme1 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">Filter Risiko: ${state.generalFilters.risiko} <button onclick="filterDashboardByRisk('${state.generalFilters.risiko}')" class="text-white hover:text-red-200" title="Hapus Filter">&times;</button></span>`
+          ? `<span class="bg-theme1 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">Filter Risiko: ${escapeHtml(state.generalFilters.risiko)} <button onclick="filterDashboardByRisk(this.dataset.val)" data-val="${escapeHtml(state.generalFilters.risiko)}" class="text-white hover:text-red-200" title="Hapus Filter">&times;</button></span>`
           : '';
         const activeTimeBadge = state.generalFilters.waktu !== 'Semua'
-          ? `<span class="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">Filter Waktu: ${state.generalFilters.waktu} <button onclick="filterDashboardByTime('${state.generalFilters.waktu}')" class="text-white hover:text-blue-200" title="Hapus Filter">&times;</button></span>`
+          ? `<span class="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">Filter Waktu: ${escapeHtml(state.generalFilters.waktu)} <button onclick="filterDashboardByTime(this.dataset.val)" data-val="${escapeHtml(state.generalFilters.waktu)}" class="text-white hover:text-blue-200" title="Hapus Filter">&times;</button></span>`
           : '';
         const activePrioBadge = isCulvert && state.generalFilters.prio !== 'Semua'
-          ? `<span class="bg-rose-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">Filter Prioritas: ${state.generalFilters.prio} <button onclick="filterDashboardByPrio('${state.generalFilters.prio}')" class="text-white hover:text-rose-200" title="Hapus Filter">&times;</button></span>`
+          ? `<span class="bg-rose-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">Filter Prioritas: ${escapeHtml(state.generalFilters.prio)} <button onclick="filterDashboardByPrio(this.dataset.val)" data-val="${escapeHtml(state.generalFilters.prio)}" class="text-white hover:text-rose-200" title="Hapus Filter">&times;</button></span>`
           : '';
 
         headerControls.innerHTML = `
@@ -3738,7 +3738,7 @@
 
         const myCulverts = state.culverts.filter(c => userContractor === 'Semua' || c.contractor === userContractor);
         myCulverts.forEach(c => {
-          updateSelect.innerHTML += `<option value="${c.id}">${c.id} (${c.contractor})</option>`;
+          updateSelect.innerHTML += `<option value="${escapeHtml(c.id)}">${escapeHtml(c.id)} (${escapeHtml(c.contractor)})</option>`;
         });
       }
       else if (type === 'channel') {
@@ -4093,7 +4093,7 @@
       // 3. Ambil URL aman sementara dari server backend (Secure Token-Protected)
       Swal.fire({
         title: 'Memuat Foto...',
-        text: 'Mengambil akses aman ke server...',
+        text: 'Mengambil ke server...',
         allowOutsideClick: false,
         showConfirmButton: false,
         didOpen: () => { Swal.showLoading(); }
@@ -4119,7 +4119,7 @@
             return;
           }
         }
-        throw new Error('Gagal mendapatkan tautan aman foto');
+        throw new Error('Gagal mendapatkan tautan foto');
       } catch (err) {
         console.warn("Gagal memuat foto via secure proxy, fallback ke direct url:", err);
         const fallbackUrl = getDirectImageUrl(cleanUrl);
@@ -4142,21 +4142,21 @@
 
     function photoInletBtnPopup(lastIns) {
       if (lastIns && lastIns.fileInlet) {
-        return `<button onclick="viewMediaMockup('${lastIns.fileInlet}')" class="text-blue-600 font-bold hover:underline">Buka Foto Inlet</button>`;
+        return `<button onclick="viewMediaMockup(this.dataset.url)" data-url="${escapeHtml(lastIns.fileInlet)}" class="text-blue-600 font-bold hover:underline">Buka Foto Inlet</button>`;
       }
       return '<span class="text-gray-400">Tidak ada</span>';
     }
 
     function photoOutletBtnPopup(lastIns) {
       if (lastIns && lastIns.fileOutlet) {
-        return `<button onclick="viewMediaMockup('${lastIns.fileOutlet}')" class="text-blue-600 font-bold hover:underline">Buka Foto Outlet</button>`;
+        return `<button onclick="viewMediaMockup(this.dataset.url)" data-url="${escapeHtml(lastIns.fileOutlet)}" class="text-blue-600 font-bold hover:underline">Buka Foto Outlet</button>`;
       }
       return '<span class="text-gray-400">Tidak ada</span>';
     }
 
     function photoOtherBtnPopup(lastIns) {
       if (lastIns && lastIns.fileOther) {
-        return `<button onclick="viewMediaMockup('${lastIns.fileOther}')" class="text-blue-600 font-bold hover:underline">Buka Foto Tambahan</button>`;
+        return `<button onclick="viewMediaMockup(this.dataset.url)" data-url="${escapeHtml(lastIns.fileOther)}" class="text-blue-600 font-bold hover:underline">Buka Foto Tambahan</button>`;
       }
       return '<span class="text-gray-400">Tidak ada</span>';
     }
@@ -4242,19 +4242,19 @@
           <div class="p-2 text-xs font-semibold leading-relaxed" style="min-width: 220px;">
             <div class="font-bold border-b pb-1 mb-1.5 text-theme1 text-sm flex items-center gap-1"><i class="ph ph-info"></i> Detail Culvert Point</div>
             <table class="w-full text-[10px] space-y-1">
-              <tr><td class="font-bold text-gray-500 pr-2">ID Culvert:</td><td class="font-mono font-bold">${clv.id}</td></tr>
-              <tr><td class="font-bold text-gray-500 pr-2">Mitra Kerja:</td><td>${clv.contractor}</td></tr>
-              <tr><td class="font-bold text-gray-500 pr-2">Tgl Cek Terakhir:</td><td>${lastIns ? lastIns.date.split(' ')[0] : 'Belum diinspeksi'}</td></tr>
-              <tr><td class="font-bold text-gray-500 pr-2">Tingkat Risiko:</td><td><span class="font-bold text-emerald-700">${risk}</span></td></tr>
-              <tr><td class="font-bold text-gray-500 pr-2">Prioritas:</td><td><span class="text-rose-600 font-bold">${priority}</span></td></tr>
-              <tr><td class="font-bold text-gray-500 pr-2">Jumlah Line:</td><td class="font-mono">${lineCount}</td></tr>
+              <tr><td class="font-bold text-gray-500 pr-2">ID Culvert:</td><td class="font-mono font-bold">${escapeHtml(clv.id)}</td></tr>
+              <tr><td class="font-bold text-gray-500 pr-2">Mitra Kerja:</td><td>${escapeHtml(clv.contractor)}</td></tr>
+              <tr><td class="font-bold text-gray-500 pr-2">Tgl Cek Terakhir:</td><td>${escapeHtml(lastIns ? lastIns.date.split(' ')[0] : 'Belum diinspeksi')}</td></tr>
+              <tr><td class="font-bold text-gray-500 pr-2">Tingkat Risiko:</td><td><span class="font-bold text-emerald-700">${escapeHtml(risk)}</span></td></tr>
+              <tr><td class="font-bold text-gray-500 pr-2">Prioritas:</td><td><span class="text-rose-600 font-bold">${escapeHtml(priority)}</span></td></tr>
+              <tr><td class="font-bold text-gray-500 pr-2">Jumlah Line:</td><td class="font-mono">${escapeHtml(lineCount)}</td></tr>
               <tr class="border-t border-gray-100"><td class="font-bold text-gray-500 pt-1" colspan="2">Dokumentasi:</td></tr>
               <tr><td class="pl-2 text-gray-500" colspan="2">Inlet: ${photoInletBtnPopup(lastIns)}</td></tr>
               <tr><td class="text-gray-500 pl-2" colspan="2">Outlet: ${photoOutletBtnPopup(lastIns)}</td></tr>
               <tr><td class="text-gray-500 pl-2" colspan="2">Tambahan: ${photoOtherBtnPopup(lastIns)}</td></tr>
             </table>
             <div class="mt-2.5 text-right border-t pt-2">
-              <button onclick="quickActionInspect('${clv.id}')" class="bg-theme1 text-white px-2.5 py-1 rounded font-bold text-[9px] hover:bg-theme2 transition shadow-sm"><i class="ph ph-plus-circle"></i> Inspeksi Baru</button>
+              <button onclick="quickActionInspect(this.dataset.id)" data-id="${escapeHtml(clv.id)}" class="bg-theme1 text-white px-2.5 py-1 rounded font-bold text-[9px] hover:bg-theme2 transition shadow-sm"><i class="ph ph-plus-circle"></i> Inspeksi Baru</button>
             </div>
           </div>
         `;
@@ -4349,10 +4349,10 @@
         item.className = 'p-2.5 hover:bg-theme5 hover:bg-opacity-30 cursor-pointer flex justify-between items-center transition';
         item.innerHTML = `
           <div class="flex flex-col">
-            <span class="font-bold text-theme1">${clv.id}</span>
-            <span class="text-[9px] text-gray-500 font-medium">${clv.location || 'Area Tambang'}</span>
+            <span class="font-bold text-theme1">${escapeHtml(clv.id)}</span>
+            <span class="text-[9px] text-gray-500 font-medium">${escapeHtml(clv.location || 'Area Tambang')}</span>
           </div>
-          <span class="text-[9px] bg-theme1 text-white font-mono px-1.5 py-0.5 rounded uppercase">${clv.contractor}</span>
+          <span class="text-[9px] bg-theme1 text-white font-mono px-1.5 py-0.5 rounded uppercase">${escapeHtml(clv.contractor)}</span>
         `;
         item.onclick = () => selectMapSearchResult(clv.id);
         suggestions.appendChild(item);
